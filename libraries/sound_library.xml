@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<diff>
+    <add sel="/soundlibrary">
+      <sound id="rfm_click" description="sound ui click" repeat="1" is3d="1" preload="0" tag="rfmsfx_eventm">
+        <sample start="sfx\ui\ui_select"/>
+        <volume start="0.5" distance="0.1"/>
+      </sound>
+      <sound id="rfm_enable" description="rfm enable" repeat="1" is3d="1" preload="0" tag="rfmsfx_eventm">
+        <sample start="extensions\upb_restockfleet\sfx\rfm_enable"/>
+        <volume start="0.5" distance="0.1"/>
+      </sound>
+      <sound id="rfm_disable" description="rfm disable" repeat="1" is3d="1" preload="0" tag="rfmsfx_eventm">
+        <sample start="extensions\upb_restockfleet\sfx\rfm_disable"/>
+        <volume start="0.5" distance="0.1"/>
+      </sound>
+    
+    </add>
+</diff>

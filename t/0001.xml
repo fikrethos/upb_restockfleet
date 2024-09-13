@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<language id="44">
+
+<page id="1134010" title="netUpb's Mod Text" descr="Text for the missions created by netUpb" voice="no">
+ <t id="4000">Enable Restock Fleet</t>
+ <t id="4001">Disable Restock Fleet</t>
+ <t id="4010">Commander has ordered replacement for ship from shipyard.\n
+    Destroyed : $SHIP$\n
+    Commander : $COMMANDER$\n
+    Shipyard  : $SHIPYARD$\n
+    Sector    : $SECTOR$
+    </t>
+ <t id="4011">Commander failed to replace ship due to insufficient funds.. Waiting for Rebuild..\n
+    Destroyed : $SHIP$\n
+    Commander : $COMMANDER$
+    Need Price : $PRICE$
+    Player Money : $MONEY$
+ </t>
+ <t id="4012">Commander failed to replace ship because can not Find any possible Best Shipyard.. Waiting for Rebuild..\n
+    Destroyed : $SHIP$\n
+    Commander : $COMMANDER$
+ </t>
+ <t id="4013">Commander failed to replace ship because $STATUS$.. Waiting for Rebuild..\n
+    Destroyed : $SHIP$\n
+    Commander : $COMMANDER$
+ </t>
+ <t id="4014">Commander has ordered rebuild ship but $STATUS$..\n
+   Destroyed : $SHIP$\n
+   Commander : $COMMANDER$
+   Shipyard  : $SHIPYARD$\n
+   Sector    : $SECTOR$
+</t>
+</page>
+
+</language>
