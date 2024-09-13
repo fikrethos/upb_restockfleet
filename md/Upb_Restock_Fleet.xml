@@ -4885,6 +4885,7 @@
 
 
 
+
         <!-- Promote olaylarında RFM içindeki object den okunan IndividualInstuctions kaydı 
             itself = true   ise kendine aktarılacak, 
                             değilse recorddaki 1 nolu gemiye
@@ -5071,6 +5072,7 @@
             </actions>
         </library>
         -->
+
 
 
 
@@ -7306,6 +7308,7 @@
 
 
 
+
         <!-- ! ! !    YAPILACAK     ! ! !
             equipmentleri özelikle de silah ve turretları olması gereken yerlerine taktırmak için araştırmak gerekiyordu.
                 (md komutları ile hangi silah hangi slota, group bilgisi vb.. bilgiler için araştırmak gerekiyor)
@@ -7426,6 +7429,7 @@
                     <!-- AKTİF KULLANDIKLARI (sadece MISSILES için geçerli olacaktır, diğerleri yine kargoda olanları verecektir) -->
                     <do_else>
                         <!--        MISSILES    -->
+                        <evaluate_ammo_storage object="$Ship" type="missile" wares="$AmmoT" amounts="$AmmoAmt" />
                         <do_for_each name="$Item" in="$AmmoT">
                             <debug_text text="'$Item = %s $Item.objectmacro = %s , loop.index = %s , %s , %s'.[$Item, $Item.objectmacro, loop.index, $AmmoAmt.{loop.index}, $Ship.ammostorage.{$Item.objectmacro}.count]" />
                             <set_value name="$Missiles.{$Item}" exact="[$AmmoAmt.{loop.index}, $Ship.ammostorage.{$Item.objectmacro}.count].max"/>
@@ -7658,6 +7662,10 @@
                 <return value="$Equipments"/>
             </actions>
         </library>
+
+
+
+
 
         <!--Yalnızca shipbuild işlemlerini ve global.$BuildTaskIDs listesinde olan tasklar için çalıştıracağız 
             LUA içinden yaptığımız BuildTask Orderların işleyişini bu 2 foksiyon ile denetleyeceğiz
@@ -8350,6 +8358,9 @@
         </cue>
 
 
+
+
+        
         <!-- PARAM List  [RFMKey, ShipINDX, (destroyedobject default null), ( $passingcriterias default [] ) ] 
             IN  : 
                 PARAM List  [RFMKey, ShipINDX, (destroyedobject default null), pass ] 
@@ -9550,6 +9561,9 @@
             </cues>
         </cue>
 
+
+
+
         <library name="Set_RebuildCueTable" purpose="run_actions">
             <params>
                 <param name="RFMKey" />
@@ -9572,6 +9586,10 @@
                 ]"/>
             </actions>
         </library>
+
+
+
+
 
         <!-- KULLANILMIYOR. bunun yerine Get_FactionWares_ByLicencedTable üzerinden sorgulanıyor
             belirtilen ware için belirtilen lisans olup olmadığını sorgular 
@@ -10470,6 +10488,8 @@
                 <return value="$Loadout"/>
             </actions>
         </library>
+
+
 
 
         <!--DIKKAT: Ardarda kullanıldığında ve büyük bilgi paketleri gönderildiğinde lua en sonuncuya yanıt verdi.
