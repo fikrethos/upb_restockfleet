@@ -2703,79 +2703,6 @@ function menu.createRFMRightTable(frame, offsetx, offsety, width)
                     errors[4] = ReadText(1001, 8563)
                 end
             
-                --DebugError(".macro = " .. tostring(record.macro) )
-                --menu.tablePrint(record.tShipPlan or {}, ".tShipPlan = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
-                -- YAPILACAK: lua haberleşmeden dolayı record.tShipPlan  oluşmamış olabilir bug vs..  
-                -- burda bir plan çıkarabiliriz. ayrıca md ye gödnerebiliriz güncellemek için
-                local function resources ()
-                    local missingResources = {}
-                    if record.tShipPlan and not errors[4] then
-                        -- Mevcut gemi zaten shipyardda ekli, burdan bir daha sorgularsak sanki yeniden ekleme yapılıyor gibi missing resources ekleniyor
-                        -- bu yüzden sanki eklenmemiş gibi davranıp (amount = 0) mevcut shipyardın missing değerlrini alacağız
-    
-                        local considerCurrent = true
-                        local numorders = (considerCurrent and 1 or 0)
-                        local buildorders = ffi.new("UIBuildOrderList[?]", numorders)
-                        if considerCurrent then
-                            local index = 0
-                            buildorders[index].shipid = 0
-                            buildorders[index].macroname = Helper.ffiNewString(record.macro)
-                            buildorders[index].loadout = Helper.callLoadoutFunction(record.tShipPlan, nil, function (loadout, _) return loadout end, false)
-                            buildorders[index].amount = 0
-                        end
-                        -- uint32_t GetNumMissingBuildResources2(UniverseID containerid, UIBuildOrderList* orders, uint32_t numorders, bool playercase);
-                        local playercase = true     -- false yaparsak bizim macrodan hariç istasyonun ihtiyaç duyduğu diğer eksik malzemeler de gelir
-                        local n = C.GetNumMissingBuildResources2(record.construction.buildingcontainer, buildorders, numorders, playercase)
-                        local buf = ffi.new("UIWareInfo[?]", n)
-                        n = C.GetMissingBuildResources(buf, n)
-                        for i = 0, n - 1 do
-                            table.insert(missingResources, { ware = ffi.string(buf[i].ware), amount = buf[i].amount })
-                        end
-                        
-                        for i = 1, 10 do
-                            --table.insert(missingResources, { ware = "Template row", amount = 0 })
-                        end
-                        --menu.tablePrint(missingResources, "missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
-                        
-                        return missingResources
-                    end
-                    -- menu.tablePrint(missingResources, "NET missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
-                        
-                end
-                local missingResources = resources()
-                --[[
-                if record.tShipPlan and not errors[4] then
-                    -- Mevcut gemi zaten shipyardda ekli, burdan bir daha sorgularsak sanki yeniden ekleme yapılıyor gibi missing resources ekleniyor
-                    -- bu yüzden sanki eklenmemiş gibi davranıp (amount = 0) mevcut shipyardın missing değerlrini alacağız
-
-                    local considerCurrent = true
-                    local numorders = (considerCurrent and 1 or 0)
-                    local buildorders = ffi.new("UIBuildOrderList[?]", numorders)
-                    if considerCurrent then
-                        local index = 0
-                        buildorders[index].shipid = 0
-                        buildorders[index].macroname = Helper.ffiNewString(record.macro)
-                        buildorders[index].loadout = Helper.callLoadoutFunction(record.tShipPlan, nil, function (loadout, _) return loadout end, false)
-                        buildorders[index].amount = 0
-                    end
-                    -- uint32_t GetNumMissingBuildResources2(UniverseID containerid, UIBuildOrderList* orders, uint32_t numorders, bool playercase);
-                    local playercase = true     -- false yaparsak bizim macrodan hariç istasyonun ihtiyaç duyduğu diğer eksik malzemeler de gelir
-                    local n = C.GetNumMissingBuildResources2(record.construction.buildingcontainer, buildorders, numorders, playercase)
-                    local buf = ffi.new("UIWareInfo[?]", n)
-                    n = C.GetMissingBuildResources(buf, n)
-                    for i = 0, n - 1 do
-                        table.insert(missingResources, { ware = ffi.string(buf[i].ware), amount = buf[i].amount })
-                    end
-
-                    for i = 1, 10 do
-                        --table.insert(missingResources, { ware = "Template row", amount = 0 })
-                    end
-                    --menu.tablePrint(missingResources, "missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
-
-                end
-                -- menu.tablePrint(missingResources, "NET missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
-                ]]
-
                 row = constructiontable:addRow(false, { fixed = true, bgColor = config.sColor.transparent } )
                 row[1]:setColSpan(10):createText("Destroy Details" , Helper.subHeaderTextProperties)
                 row[1].properties.halign = "center"
@@ -2834,8 +2761,42 @@ function menu.createRFMRightTable(frame, offsetx, offsety, width)
                         menu.refreshInfoFrame()
                     end 
                 
-                --
-                
+                --DebugError(".macro = " .. tostring(record.macro) )
+                --menu.tablePrint(record.tShipPlan or {}, ".tShipPlan = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
+                -- YAPILACAK: lua haberleşmeden dolayı record.tShipPlan  oluşmamış olabilir bug vs..  
+                -- burda bir plan çıkarabiliriz. ayrıca md ye gödnerebiliriz güncellemek için
+                local function Get_MissingResources (container, macro, tShipPlan)
+                    local missingResources = {}
+                    -- Mevcut gemi zaten shipyardda ekli, burdan bir daha sorgularsak sanki yeniden ekleme yapılıyor gibi missing resources ekleniyor
+                    -- bu yüzden sanki eklenmemiş gibi davranıp (amount = 0) mevcut shipyardın missing değerlrini alacağız
+                    local considerCurrent = true
+                    local numorders = (considerCurrent and 1 or 0)
+                    local buildorders = ffi.new("UIBuildOrderList[?]", numorders)
+                    if considerCurrent then
+                        local index = 0
+                        buildorders[index].shipid = 0
+                        buildorders[index].macroname = Helper.ffiNewString(macro)
+                        buildorders[index].loadout = Helper.callLoadoutFunction(tShipPlan, nil, function (loadout, _) return loadout end, false)
+                        buildorders[index].amount = 0
+                    end
+                    -- uint32_t GetNumMissingBuildResources2(UniverseID containerid, UIBuildOrderList* orders, uint32_t numorders, bool playercase);
+                    local playercase = true     -- false yaparsak bizim macrodan hariç istasyonun ihtiyaç duyduğu diğer eksik malzemeler de gelir
+                    local n = C.GetNumMissingBuildResources2(container, buildorders, numorders, playercase)
+                    local buf = ffi.new("UIWareInfo[?]", n)
+                    n = C.GetMissingBuildResources(buf, n)
+                    for i = 0, n - 1 do
+                        table.insert(missingResources, { ware = ffi.string(buf[i].ware), amount = buf[i].amount })
+                    end
+                    
+                    for i = 1, 10 do
+                        --table.insert(missingResources, { ware = "Template row", amount = 0 })
+                    end
+                    --menu.tablePrint(missingResources, "missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
+                    return missingResources                        
+                end
+                local missingResources = (record.tShipPlan and not errors[4] ) and Get_MissingResources(record.construction.buildingcontainer, record.macro, record.tShipPlan) or {}
+                -- menu.tablePrint(missingResources, "NET missingResources = [" .. tostring(fleetKey) .. "][" .. tostring(SelectedShip) .. "]" , true, true)
+
                 if #missingResources > 0 then
                     resourcetable = frame:addTable(2, { tabOrder = 8, width = ftable.properties.width, x = ftable.properties.x, y = 0, reserveScrollBar = true, highlightMode = "off", skipTabChange = true, backgroundID = "solid", backgroundColor = config.Color.table_background_3d_editor })
                     
