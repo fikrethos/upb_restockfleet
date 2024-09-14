@@ -3385,6 +3385,9 @@
                                     event.object.iswreck, event.object.exists, @event.object.isactive, event.object.isoperational
                                     ]" chance="Main.$ChangesOnFleetDebug"/>
 
+                                    <set_value name="RF_Manager.$destroyedshipkey" exact="$Ship_IDX" />
+                                    <set_value name="RF_Manager.$destroyedshipcommanderkey" exact="Main.$FleetRecords.{$RFMKey}.{$Ship_IDX}.$commanderidx" />
+
                                     <do_if value="Main.$RM_Fleets.{$RFMKey}.$autobuild">
                                         <debug_text text="'Signalled Cue for Construct RMF_%s_(%s) &lt;%s&gt; Age:%s'.[$RFMKey, $Ship_IDX, event.object, player.age]"  chance="Main.$ChangesOnFleetDebug"/>
                                         <signal_cue_instantly cue="AddConstructonShipForFleet" param="[$RFMKey, $Ship_IDX, (if not $invalid? then event.object)]" />
@@ -3562,10 +3565,10 @@
                                 RFMKey : %s   [table idx : %s] \n
                                     is the added ship is a RFM command ship? : %s \n
                                     RFM Cancelling?   %s  \n
-                                    Added Ship          : (isWreck %s) (exists %s) (isactive %s) (isoperational %s) %s %s %s     \n
-                                    Object (New Comm)   : (isWreck %s) (exists %s) (isactive %s) (isoperational %s) %s %s %s     \n
-                                    Assignment New      : %s  \n
-                                    Groupid             : %s (%s)
+                                    Added Ship     [param]  : (isWreck %s) (exists %s) (isactive %s) (isoperational %s) %s %s %s     \n
+                                    New Commander  [object] : (isWreck %s) (exists %s) (isactive %s) (isoperational %s) %s %s %s     \n
+                                    Assignment New [param2] : %s  \n
+                                    Groupid                 : %s (%s)
                                     '.[
                                     if @Main.$RM_Fleets.{$RFMKey}.$isLockedFleet then 'LOCKED' else 'open',
                                     $RFMKey, @$fleetshipsByComp.{event.param},
@@ -3738,6 +3741,28 @@
                                             <remove_from_list name="$RemoveProcessShipKeys" exact="$fleetshipsByComp.{event.param}" />
                                             <debug_text text="'   updated Remove Process Ship Keys:%s'.[$RemoveProcessShipKeys]" chance="Main.$ChangesOnFleetDebug"/>
                                             <debug_text text="'   ATLA. Patlamadan dolayı yeni düzenleme yapılıyor.'" chance="Main.$ChangesOnFleetDebug"/>
+                                            <set_value name="$addedshipkey" exact="$fleetshipsByComp.{event.param}" />
+                                            <set_value name="$addednewcommanderkey" exact="$fleetshipsByComp.{event.object}" />
+                                            <!-- Özel durum trader, miner, salvager görevi devralma -->
+                                            <do_if value="$destroyedshipcommanderkey?">
+                                                <debug_text text="'   destroyedshipkey = %s , destroyedshipcommanderkey = %s , addedshipkey = %s, addednewcommanderkey = %s'.[$destroyedshipkey, $destroyedshipcommanderkey, $addedshipkey, $addednewcommanderkey]" chance="Main.$ChangesOnFleetDebug"/>
+                                                <!-- sublardan biri patlayan komutanının görevini devralıyor-->
+                                                <do_if value="$addednewcommanderkey == $destroyedshipcommanderkey">
+                                                    <debug_text text="'     sub [%s], patlayan komutanının[%s] yerine yeni commander oluyor..'.[$addedshipkey, $destroyedshipkey]" chance="Main.$ChangesOnFleetDebug"/>    
+                                                    <!-- patlayan geminin order bilgisi trader, miner veya salvager ise warebasket listesini de yeni commandere ekle ancak kaydı güncellemeyceğiz-->
+                                                    <do_if value="Main.$FleetRecords.{$RFMKey}.{$destroyedshipkey}.$defaultorder?">
+                                                        <run_actions ref="Add_OrderTable_To_Ship">
+                                                            <param name="orderT" value="Main.$FleetRecords.{$RFMKey}.{$destroyedshipkey}.$defaultorder" />
+                                                            <param name="ship" value="event.param" />
+                                                        </run_actions>
+                                                        <debug_text text="'     sub [%s], patlayan komutanının[%s] order bilgisini aldı..'.[$addedshipkey, $destroyedshipkey]" chance="Main.$ChangesOnFleetDebug"/>    
+                                                    </do_if>
+                                                    <remove_value name="$addedshipkey" />
+                                                    <remove_value name="$addednewcommanderkey" />
+                                                    <remove_value name="$destroyedshipkey" />
+                                                    <remove_value name="$destroyedshipcommanderkey" />
+                                                </do_if>
+                                            </do_if>
                                         </do_elseif>
                                         <do_else>
                                             <debug_text text="'   SPECADD. Kullanıcı ekleme yapıyor.'" chance="Main.$ChangesOnFleetDebug"/>
