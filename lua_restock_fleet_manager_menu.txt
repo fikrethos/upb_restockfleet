@@ -4718,6 +4718,10 @@ function menu.getContainerNameAndColors(containerid, iteration, coloricon, color
 	return name, mouseover
 end
 function menu.getPassedTime(time)
+    if not time then 
+        local xdebug = debug1 and DebugError(menu.name .. ".getPassedTime(): time parameter is nill. Returning empty result")
+        return "" 
+    end
 	local passedtime = C.GetCurrentGameTime() - time
 	if passedtime < 0 then
 		local xdebug = debug1 and DebugError(menu.name .. ".getPassedTime(): given time is in the future. Returning empty result")

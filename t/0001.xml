@@ -3,11 +3,50 @@
 
 <page id="1134010" title="netUpb's Mod Text" descr="Text for the missions created by netUpb" voice="no">
 
+   <t id="1">Upb Restock Fleet Manager</t>
+   
+   <t id="500">(Fleet Tag)RFM</t>
+   <!-- Conversation Menu Texts-->
    <t id="1000">Upb</t>
-   <t id="1010">(Menu Section)RFM</t>
+   <t id="1010">RFM</t>
+   <t id="1020">Enable</t>
+   <t id="1021">Disable</t>
+   <t id="1022">Restart</t>
+   <t id="1030">Restock</t>
+   <t id="1040">Fleet</t>
+   <t id="1041">Fleets</t>
+   <t id="1050">Management</t>
+   <t id="1060">Options</t>
+   <t id="1070">Back</t>
+   <t id="1071">Previous</t>
+   <t id="1072">Next</t>
+   <t id="1080">From</t>
+   <t id="1090">More</t>
+   <t id="1100">0</t>
+   <t id="1101">1</t>
+   <t id="1102">2</t>
+   <t id="1103">3</t>
+   <t id="1104">4</t>
+   <t id="1105">5</t>
+   <t id="1106">6</t>
+   <t id="1107">7</t>
+   <t id="1108">8</t>
+   <t id="1109">9</t>
+   
+   <t id="1110">Restart All Fleets</t>
+   <t id="1120">Disable All Fleets</t>
 
-   <t id="4000">Enable Restock Fleet</t>
-   <t id="4001">Disable Restock Fleet</t>
+   <t id="1200">Produce for Lost Ships</t>
+   <t id="1210">Production signal sent..</t>
+   
+   <t id="1300">Installed</t>
+   <t id="1310">Updated</t>
+   <t id="1320">Reset</t>
+   <t id="1330">Complete</t>
+   
+
+   <t id="1400">Globals Is Setting to Defaults</t>
+   
 
    <t id="4010">Commander has ordered replacement for ship from shipyard.\n
       Destroyed : $SHIP$\n
