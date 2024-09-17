@@ -1811,7 +1811,7 @@
         </cue>
 
 
-        <library name="CloneRFM" purpose="run_actions">
+        <library name="CloneRFM" purpose="run_actions" namespace="this">
             <params>
                 <param name="CloneRFMKey" />
                 <param name="entity" />
@@ -1824,8 +1824,8 @@
                 <set_value name="$deepdebug" exact="100" />
                 <set_value name="$debugchance" exact="100" />
                 <set_value name="$tStr" exact="'                   '" />
-                <set_value name="$Records" exact="md.Upb_Restock_Fleet.Main.$FleetRecords.{$CloneRFMKey}.clone" />
-                <set_value name="$Loadouts" exact="md.Upb_Restock_Fleet.Main.$Loadouts.{$CloneRFMKey}.clone" />
+                <set_value name="$Records" exact="Main.$FleetRecords.{$CloneRFMKey}.clone" />
+                <set_value name="$Loadouts" exact="Main.$Loadouts.{$CloneRFMKey}.clone" />
                 
                 <run_actions ref="Get_New_RFMKey" result="$RFMKey"/>
                 <include_actions ref="Let_RFM_LogFileNames" />
@@ -1841,18 +1841,17 @@
                 <do_for_each name="$sKey" valuename="$record" in="$Records">
                     <do_if value="$record.$id gt 1">
 
-                        <set_value name="$record.$reBuildStartTime" exact="null" />
-                        <set_value name="$record.$reBuildTryNum" exact="0" />
-
-                        <set_value name="md.Upb_Restock_Fleet.Main.$FleetRecords.{$RFMKey}.{$record.$id}" exact="$record" />
+                        <set_value name="Main.$FleetRecords.{$RFMKey}.{$record.$id}" exact="$record.clone" />
 
                         <run_actions ref="SetRecord_DestroyedObject">
                             <param name="RFMKey" value="$RFMKey" />
                             <param name="ShipKey" value="$record.$id" />
                         </run_actions>
-                        
-                        <set_value name="md.Upb_Restock_Fleet.Main.$Loadouts.{$RFMKey}.{$record.$id}" exact="$Loadouts.{$record.$id}" />
-                        <append_to_list name="md.Upb_Restock_Fleet.Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$record.$id"/>
+                        <set_value name="Main.$FleetRecords.{$RFMKey}.{$record.$id}.$reBuildStartTime" exact="null" />
+                        <set_value name="Main.$FleetRecords.{$RFMKey}.{$record.$id}.$reBuildTryNum" exact="0" />
+
+                        <set_value name="Main.$Loadouts.{$RFMKey}.{$record.$id}" exact="$Loadouts.{$record.$id}" />
+                        <append_to_list name="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$record.$id"/>
                     </do_if>
                 </do_for_each>
                 <debug_text text="$tStr + '  Clone.Records Güncellendi...'.[]" chance="$deepdebug" />
