@@ -189,7 +189,7 @@
                 <set_value name="$ib" exact="0" />
                 <do_for_each name="$yard" in="Main.$active_stations" counter="$iy">
                     <set_value name="$ia" exact="if Main.$blacklist_stations.indexof.{$yard} then 1 else 0" operation="add" />
-                    <debug_text text="'%s %s %s === %s%s'.[if Main.$blacklist_stations.indexof.{$yard} then '  ' + $ia + ' -BLACLIST ' else $iy + ' - ',$yard.idcode, $yard.knownname, (if $yard.isknown then '' else 'UNKNOWN '), $yard.sector.knownname]" chance="$debugchance"/>
+                    <debug_text text="'%s %s %s === %s%s'.[if Main.$blacklist_stations.indexof.{$yard} then ' ' + $iy + ' ' + $ia + ' -BLACLIST ' else $iy + ' -',$yard.idcode, $yard.knownname, (if $yard.isknown then '' else 'UNKNOWN '), $yard.sector.knownname]" chance="$debugchance"/>
                     <!-- Unknown Sectors -->
                     <do_if value="not $yard.isknown">
                         <do_if value="not Main.$blacklist_stations.indexof.{$yard}">
@@ -1320,7 +1320,7 @@
             </params>
             <actions>
                 <!-- Update Defaults, Sonradan eklenecek değişkenler için resetleme kontrolü -->
-                <do_if value="not global.$upbRF_DATA.$Default.$v226?">
+                <do_if value="not global.$upbRF_DATA.$Default.$v230?">
                     <set_value name="$changedGlobalDefaults" />
                 </do_if>
 
@@ -1328,8 +1328,11 @@
                     <set_value name="global.$upbRF_DATA" exact="table[]"/>
                     <debug_text text="'RFM Globals Is Set to Defaults'.[]" />
                     <do_if value="$reset" exact="true">
-                        <show_help duration="7s" custom="'Updated upb Restock Fleet Manager, Globals Is Setting to Defaults'"/>
+                        <show_help duration="7s" custom="'Reset upb Restock Fleet Manager, Globals Is Setting to Defaults'"/>
                     </do_if>
+                    <do_else>
+                        <show_help duration="7s" custom="'Updated upb Restock Fleet Manager, Globals Is Setting to Defaults'"/>
+                    </do_else>
                     <remove_value name="$changedGlobalDefaults" />
                 </do_if>
                 <set_value name="$alertlevels" exact="table[
@@ -1387,7 +1390,7 @@
 
                 <set_value name="global.$upbRF_DATA.$Default" exact="table
                 [
-                    $v226 = null ,
+                    $v230 = null ,
                     $shownotification       = false  ,
                     $showhelp               = true   ,
                     $write_to_logbook       = true   ,
@@ -1404,6 +1407,7 @@
                     $playermoneythreshold       = 30000000      ,
                     $moneystep                  = 100000        ,
                     $maxmoney                   = 100000000     ,
+                    $personnelcloning           = false     ,
                     $DebugChance                = 0         ,
                     $DeepDebug                  = 0         ,
                     $ChangesOnFleetDebug        = 0         ,
@@ -2228,7 +2232,7 @@
                         
                     </conditions>
                     <actions>
-                            <debug_text text="'New Object Known To Player   object = %s %s ( %s )'.[event.object.knownname, event.object.idcode, event.object.sector.knownname ]" chance="Main.$DeepDebug"/>
+                            <debug_text text="'New Object KNOWN To Player   object = %s %s ( %s )'.[event.object.knownname, event.object.idcode, event.object.sector.knownname ]" chance="Main.$DebugChance"/>
 
                             <remove_from_group group="Main.$blacklist_stations" object="event.object" />
                             <debug_text text="'  Removed from blacklist_stations. %s %s == %s'.[event.object.idcode, event.object.knownname, event.object.sector.knownname]" chance="Main.$DeepDebug"/>
@@ -2249,74 +2253,87 @@
                     </actions>
                 </cue>
 
-                <!-- T E S T   E D I L E C E K-->
                 <cue name="Relation_Changed" instantiate="true">
                     <conditions>
                         <event_player_relation_changed />
+                        <!-- <debug_text text="'object = %s , faction = %s , [new, old] relation = %s , relationchangereason = %s '.[event.object, event.param, event.param2, event.param3]" />-->
                         <!-- belli süre için değişen durumları istemiyoruz (gemiye saldırı zamanı oluşan relation düşmeleri gibi) -->
                         <check_value value="not event.object" comment="only permanent changes are relevant"/>
                         <!-- Sadece dock relationun olumlu ve olumsuz değişmini yakalamak istiyoruz-->
-                        <set_value name="$EntryRelation" exact="event.param.relation.friend.min" comment="0.01 (UI value 10) = friendly"/>
                         <set_value name="$TargetRelation" exact="-0.0099" comment="-0.0099 (UI value -9) = allowed to dock"/>
-                        <check_value value="(event.param2.{1} ge $TargetRelation) and (event.param2.{2} lt $TargetRelation)" comment="Dock Status Changed, Can Dock"/>
-                        <check_value value="(event.param2.{1} lt $TargetRelation) and (event.param2.{2} ge $TargetRelation)" comment="Dock Status Changed, No Dock"/>
+                        <check_any>
+                            <check_value value="(event.param2.{1} ge $TargetRelation) and (event.param2.{2} lt $TargetRelation)" comment="Dock Status Changed, Can Dock"/>
+                            <check_value value="(event.param2.{1} lt $TargetRelation) and (event.param2.{2} ge $TargetRelation)" comment="Dock Status Changed, No Dock"/>
+                        </check_any>
                     </conditions>
                     <actions>
                         <debug_text text="'R E L A T I O N   C H A N G E D   \n
                         entity = %s , faction = %s , [new,old] = %s , relationchangereason = %s
                         '.[event.object, event.param, event.param2, event.param3]" chance="Main.$DeepDebug"/>
-                        <play_sound object="player.entity" sound="'ui_notification_player_alert_04'" chance="Main.$DeepDebug"/>
-
-                        <!-- 
-                        <set_value name="$EntryRelation" exact="event.param.relation.friend.min" comment="0.01 (UI value 10) = friendly"/>
-                        <set_value name="$TargetRelation" exact="-0.0099" comment="-0.0099 (UI value -9) = allowed to dock"/>
-                        -->    
-                        <!-- 
-                        <run_actions ref="Update_BlacklistStations" />
-                        -->
                         
+                        <!-- DOCK-->
                         <do_if value="(event.param2.{1} ge $TargetRelation) and (event.param2.{2} lt $TargetRelation)" comment="Dock status changed, dock yapabiliyor">
-                            <debug_text text="'%s CHANGED DOCK STATUS Dock yapabiliyoruz'.[event.param]" chance="Main.$DeepDebug"/>
-                            <do_if value="Main.$blacklist_stations.indexof.{event.param}">
-                                <remove_from_group group="Main.$blacklist_stations" object="event.param" />
-                                <debug_text text="'Removed from Blacklist. %s %s == %s'.[event.param.idcode, event.param.knownname, event.param.sector.knownname]" chance="Main.$DeepDebug"/>
-                                
-                                <do_if value="player.entity.$md_RFM_DataChanged?">
-                                    <set_value name="player.entity.$blacklist_stations" exact="Main.$blacklist_stations.list" />
-                                    <debug_text text="'buildstations.changed ATAMASI YAPILDI .. %s %s'.[Main.$blacklist_stations.count, Main.$blacklist_stations.list]" chance="Main.$DeepDebug"/>
-                                    <raise_lua_event name="'buildstations.changed'" />
-                                </do_if>
+                            <debug_text text="'%s CHANGED DOCK STATUS [ Dock yapabiliyoruz ]'.[event.param]" chance="Main.$DebugChance"/>
+                            <play_sound object="player.entity" sound="'ui_notification_player_alert_04'" chance="Main.$DeepDebug"/>
 
-                            </do_if>
+                            <do_for_each name="$station" in="Main.$active_stations" counter="$i" >
+                                <do_if value="$station.trueowner == event.param">
+                                    <debug_text text="'  %s - Station. %s %s == %s'.[$i, $station.idcode, $station.knownname, $station.sector.knownname]" chance="Main.$DeepDebug"/>
+                                    <do_if value="Main.$blacklist_stations.indexof.{$station}">
+                                        <remove_from_group group="Main.$blacklist_stations" object="$station" />
+                                        <debug_text text="'    Removed from Blacklist. %s %s == %s'.[$station.idcode, $station.knownname, $station.sector.knownname]" chance="Main.$DeepDebug"/>
+                                        
+                                        <do_if value="player.entity.$md_RFM_DataChanged?">
+                                            <set_value name="player.entity.$blacklist_stations" exact="Main.$blacklist_stations.list" />
+                                            <debug_text text="'      buildstations.changed ATAMASI YAPILDI .. %s %s'.[Main.$blacklist_stations.count, Main.$blacklist_stations.list]" chance="Main.$DeepDebug"/>
+                                            <raise_lua_event name="'buildstations.changed'" />
+                                        </do_if>
+        
+                                    </do_if>
+                                </do_if>
+                            </do_for_each>
+
                         </do_if>
 
+                        <!-- CANT DOCK-->
                         <do_if value="(event.param2.{1} lt $TargetRelation) and (event.param2.{2} ge $TargetRelation)" comment="Dock status changed, dock yapamayacak">
-                            <debug_text text="'%s CHANGED DOCK STATUS Dock izni yok'.[event.param]" chance="Main.$DeepDebug"/>
-                            <do_if value="not Main.$blacklist_stations.indexof.{event.param}">
-                                <add_to_group groupname="Main.$blacklist_stations" object="event.param" />
-                                <debug_text text="'Added to Blacklist. %s %s == %s'.[event.param.idcode, event.param.knownname, event.param.sector.knownname]" chance="Main.$DeepDebug"/>
-                                
-                                <do_if value="player.entity.$md_RFM_DataChanged?">
-                                    <set_value name="player.entity.$blacklist_stations" exact="Main.$blacklist_stations.list" />
-                                    <debug_text text="'blacklist_stations.changed ATAMASI YAPILDI .. %s %s'.[Main.$blacklist_stations.count, Main.$blacklist_stations.list]" chance="Main.$DeepDebug"/>
-                                    <raise_lua_event name="'buildstations.changed'" />
+                            <debug_text text="'%s CHANGED DOCK STATUS [ Dock izni yok ]'.[event.param]" chance="Main.$DebugChance"/>
+
+                            <do_for_each name="$station" in="Main.$active_stations" counter="$i" >
+                                <do_if value="$station.trueowner == event.param">
+                                    <debug_text text="'  %s - Station. %s %s == %s'.[$i, $station.idcode, $station.knownname, $station.sector.knownname]" chance="Main.$DeepDebug"/>
+                                    
+                                    <do_if value="not Main.$blacklist_stations.indexof.{$station}">
+                                        <add_to_group groupname="Main.$blacklist_stations" object="$station" />
+                                        <debug_text text="'    Added to Blacklist. %s %s == %s'.[$station.idcode, $station.knownname, $station.sector.knownname]" chance="Main.$DeepDebug"/>
+                                        
+                                        <do_if value="player.entity.$md_RFM_DataChanged?">
+                                            <set_value name="player.entity.$blacklist_stations" exact="Main.$blacklist_stations.list" />
+                                            <debug_text text="'      blacklist_stations.changed ATAMASI YAPILDI .. %s %s'.[Main.$blacklist_stations.count, Main.$blacklist_stations.list]" chance="Main.$DeepDebug"/>
+                                            <raise_lua_event name="'buildstations.changed'" />
+                                        </do_if>
+                                        
+                                    </do_if>
                                 </do_if>
+                            </do_for_each>
 
-                            </do_if>
                         </do_if>
 
-
-
-
-
-
-                        <debug_text text="'$EntryRelation (friend.min) = %s , $TargetRelation (allowed to dock) = %s'.[$EntryRelation, $TargetRelation]" chance="Main.$DeepDebug"/>
+                        <!-- Debug -->
+                        <set_value name="$EntryRelation" exact="event.param.relation.friend.min" comment="0.01 (UI value 10) = friend"/>
+                        <debug_text text="'  $EntryRelation (friend.min) = %s , $TargetRelation (allowed to dock) = %s'.[$EntryRelation, $TargetRelation]" chance="Main.$DeepDebug"/>
                         <do_if value="(event.param.relationto.{faction.player} ge $EntryRelation) ">
-                            <debug_text text="'%s EN AZ FRIEND'.[event.param]" chance="Main.$DeepDebug"/>
+                            <debug_text text="'   %s FRIEND'.[event.param]" chance="Main.$DeepDebug"/>
                         </do_if>
+                        <do_else>
+                            <debug_text text="'   %s NOT FRIEND'.[event.param]" chance="Main.$DeepDebug"/>
+                        </do_else>
                         <do_if value="(event.param.relationto.{faction.player} ge $TargetRelation) ">
-                            <debug_text text="'%s ALLOWED TO DOCK'.[event.param]" chance="Main.$DeepDebug"/>
+                            <debug_text text="'   %s ALLOWED TO DOCK'.[event.param]" chance="Main.$DeepDebug"/>
                         </do_if>
+                        <do_else>
+                            <debug_text text="'   %s DOCKING IS NOT ALLOWED'.[event.param]" chance="Main.$DeepDebug"/>
+                        </do_else>
                         
                     </actions>
                 </cue>
@@ -8171,11 +8188,25 @@
                         <do_all exact="$Roles.count" counter="$i">
                             <do_for_each name="$Crew" in="$Ship_BulkCrew.{$Roles.{$i}}">
                                 <create_npc_template name="$NPC" object="$NewShip" role="$Roles.{$i}" macro="$Crew.$macro"/>
-                                <set_skill type="skilltype.engineering" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.engineering}"/>
-                                <set_skill type="skilltype.morale" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.morale}"/>
-                                <set_skill type="skilltype.boarding" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.boarding}"/>
-                                <set_skill type="skilltype.management" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.management}"/>
-                                <set_skill type="skilltype.piloting" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.piloting}"/>
+                                <do_if value="global.$upbRF_DATA.$Editing.$personnelcloning">
+                                    <set_value name="$skillEngineering" exact="$Crew.$skill.{skilltype.engineering}" />
+                                    <set_value name="$skillMorale" exact="$Crew.$skill.{skilltype.morale}" />
+                                    <set_value name="$skillBoarding" exact="$Crew.$skill.{skilltype.boarding}" />
+                                    <set_value name="$skillManagement" exact="$Crew.$skill.{skilltype.management}" />
+                                    <set_value name="$skillPiloting" exact="$Crew.$skill.{skilltype.piloting}" />
+                                </do_if>
+                                <do_else>
+                                    <set_value name="$skillEngineering" exact="[1, 2, 3, 4, 5].random" />
+                                    <set_value name="$skillMorale" exact="[1, 2, 3, 4, 5].random" />
+                                    <set_value name="$skillBoarding" exact="[1, 2, 3, 4, 5].random" />
+                                    <set_value name="$skillManagement" exact="[1, 2, 3, 4, 5].random" />
+                                    <set_value name="$skillPiloting" exact="[1, 2, 3, 4, 5].random" />
+                                </do_else>
+                                <set_skill type="skilltype.engineering" object="$NewShip" template="$NPC" exact="$skillEngineering"/>
+                                <set_skill type="skilltype.morale" object="$NewShip" template="$NPC" exact="$skillMorale"/>
+                                <set_skill type="skilltype.boarding" object="$NewShip" template="$NPC" exact="$skillBoarding"/>
+                                <set_skill type="skilltype.management" object="$NewShip" template="$NPC" exact="$skillManagement"/>
+                                <set_skill type="skilltype.piloting" object="$NewShip" template="$NPC" exact="$skillPiloting"/>
                             </do_for_each>
                         </do_all>
 
@@ -9294,11 +9325,25 @@
                                     <do_all exact="$Roles.count" counter="$i">
                                         <do_for_each name="$Crew" in="$Ship_BulkCrew.{$Roles.{$i}}">
                                             <create_npc_template name="$NPC" object="$NewShip" role="$Roles.{$i}" macro="$Crew.$macro"/>
-                                            <set_skill type="skilltype.engineering" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.engineering}"/>
-                                            <set_skill type="skilltype.morale" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.morale}"/>
-                                            <set_skill type="skilltype.boarding" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.boarding}"/>
-                                            <set_skill type="skilltype.management" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.management}"/>
-                                            <set_skill type="skilltype.piloting" object="$NewShip" template="$NPC" exact="$Crew.$skill.{skilltype.piloting}"/>
+                                            <do_if value="global.$upbRF_DATA.$Editing.$personnelcloning">
+                                                <set_value name="$skillEngineering" exact="$Crew.$skill.{skilltype.engineering}" />
+                                                <set_value name="$skillMorale" exact="$Crew.$skill.{skilltype.morale}" />
+                                                <set_value name="$skillBoarding" exact="$Crew.$skill.{skilltype.boarding}" />
+                                                <set_value name="$skillManagement" exact="$Crew.$skill.{skilltype.management}" />
+                                                <set_value name="$skillPiloting" exact="$Crew.$skill.{skilltype.piloting}" />
+                                            </do_if>
+                                            <do_else>
+                                                <set_value name="$skillEngineering" exact="[1, 2, 3, 4, 5].random" />
+                                                <set_value name="$skillMorale" exact="[1, 2, 3, 4, 5].random" />
+                                                <set_value name="$skillBoarding" exact="[1, 2, 3, 4, 5].random" />
+                                                <set_value name="$skillManagement" exact="[1, 2, 3, 4, 5].random" />
+                                                <set_value name="$skillPiloting" exact="[1, 2, 3, 4, 5].random" />
+                                            </do_else>
+                                            <set_skill type="skilltype.engineering" object="$NewShip" template="$NPC" exact="$skillEngineering"/>
+                                            <set_skill type="skilltype.morale" object="$NewShip" template="$NPC" exact="$skillMorale"/>
+                                            <set_skill type="skilltype.boarding" object="$NewShip" template="$NPC" exact="$skillBoarding"/>
+                                            <set_skill type="skilltype.management" object="$NewShip" template="$NPC" exact="$skillManagement"/>
+                                            <set_skill type="skilltype.piloting" object="$NewShip" template="$NPC" exact="$skillPiloting"/>
                                         </do_for_each>
                                     </do_all>
                                     

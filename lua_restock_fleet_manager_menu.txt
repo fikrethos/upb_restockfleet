@@ -513,6 +513,7 @@ function menu.onShowMenu()
         menu.editedSettings.ValidUpdates.PYards.peoples = (menu.param[5]["Editing"].ValidUpdates.PYards.peoples == 1) and true or false
         menu.editedSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Editing"].ValidUpdates.NYards.equipments == 1) and true or false
         menu.editedSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Editing"].ValidUpdates.NYards.peoples == 1) and true or false
+        menu.editedSettings.personnelcloning = (menu.param[5]["Editing"].personnelcloning == 1) and true or false
         menu.editedSettings.DebugFileDetail_Fleets = (menu.param[5]["Editing"].DebugFileDetail_Fleets == 1) and true or false
         menu.editedSettings.DebugFileDetail_Records = (menu.param[5]["Editing"].DebugFileDetail_Records == 1) and true or false
         for key, value in pairs(menu.editedSettings.failcases) do
@@ -530,6 +531,7 @@ function menu.onShowMenu()
         menu.defaultSettings.ValidUpdates.PYards.peoples = (menu.param[5]["Default"].ValidUpdates.PYards.peoples == 1) and true or false
         menu.defaultSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Default"].ValidUpdates.NYards.equipments == 1) and true or false
         menu.defaultSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Default"].ValidUpdates.NYards.peoples == 1) and true or false
+        menu.defaultSettings.personnelcloning = (menu.param[5]["Default"].personnelcloning == 1) and true or false
         menu.defaultSettings.DebugFileDetail_Fleets = (menu.param[5]["Default"].DebugFileDetail_Fleets == 1) and true or false
         menu.defaultSettings.DebugFileDetail_Records = (menu.param[5]["Default"].DebugFileDetail_Records == 1) and true or false
         for key, value in pairs(menu.defaultSettings.failcases) do
@@ -1373,6 +1375,12 @@ function menu.Settings_RowFormat(frame, offsetX, offsetY, width)
     row[2]:setColSpan(3):createText("Retry Time", { mouseOverText = "How long will it take for ships that failed to be produced to be attempted again automatically?", fontsize = map_fontsize })
     row[5]:setColSpan(8):createSliderCell({ min = 1, max = 30, step = 1, start = menu.editedSettings.NextRetryTime, suffix = ReadText(1001, 103), height = map_textheight })
     row[5].handlers.onSliderCellConfirm = menu.slidercell_NextRetryTime
+
+    --personnelcloning
+    row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent } )
+    row[2]:setColSpan(3):createText("Personnel Cloning", { mouseOverText = "It creates the same personnel ranks as in the RFM record of the produced ship. If not selected, random low-level personnel will be created.", fontsize = map_fontsize })
+    row[5]:setColSpan(1):createCheckBox(menu.editedSettings.personnelcloning, { width = map_textheight, height = map_textheight })
+    row[5].handlers.onClick = menu.checkbox_personnelcloning
 
     -- MoneyThreshold
     row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent })
@@ -3556,6 +3564,7 @@ function menu.checkbox_write_to_logbook(_, checked)
     menu.Set_Md_Settings("write_to_logbook " .. tostring(menu.editedSettings.write_to_logbook))
 end
 
+
 function menu.checkbox_UsePlayerYards(_, checked)
 	menu.editedSettings.UsePlayerYards = checked
     menu.Set_Md_Settings("UsePlayerYards " .. tostring(menu.editedSettings.UsePlayerYards))
@@ -3623,6 +3632,10 @@ end
 function menu.slidercell_NextRetryTime(_, value)
 	menu.editedSettings.NextRetryTime = value
     menu.Set_Md_Settings("NextRetryTime " .. tostring(value))
+end
+function menu.checkbox_personnelcloning(_, checked)
+	menu.editedSettings.personnelcloning = checked
+    menu.Set_Md_Settings("personnelcloning " .. tostring(menu.editedSettings.personnelcloning))
 end
 function menu.slidercell_playermoneythreshold(_, value)
 	menu.editedSettings.playermoneythreshold = value
