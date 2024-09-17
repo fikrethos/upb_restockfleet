@@ -3,10 +3,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 <!-- Yapılanlar ve düzeltilenler :
         * 
-        1- RFM sub Trader, Miner ve Salvagerların warebasket listesi kayıt altına alındı.
-        2- RFM sub Minerların order parametresindeki warebasket_override hatası düzeltildi.
-        3- RFM (İstasyon) manager kaydını oluşturmadaki hata düzeltildi.
-        4- Oyuncuya ait İskelelerde ship lisans ve equipment lisans kontrollerindeki hata düzeltildi.
+        1- Üretilen gemi mürettebatının record zamanı rütbeler ile klonlanıp klonlanmayacağı ayarlarla belirlendi.
+        2- Faction relation change kodundaki hata giderildi.
+        3- RFM'lerin klonlanabilme özelliği eklendi.
+        4- 
         
         
     -->
@@ -2166,10 +2166,10 @@
                     <actions>
                         <set_value name="$object" exact="if event.param? and typeof event.param == datatype.list then event.param.{1} else event.param" />
                         <do_if value="@md.ExtendedConversationMenu.Main.exists">
-                            <add_player_choice_sub text="'\33' + $normalColor + 'Upb Restock Fleet' + '\33X'" section="RestockManager"  />
+                            <add_player_choice_sub text="'\33' + $normalColor + {1134010, 1000} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" section="RestockManager"  comment="Upb Restock Fleet"/>
                         </do_if>
                         <do_else>
-                            <add_player_choice_sub text="'\33' + $normalColor + 'Upb Restock Fleet' + '\33X'" position="bottom_left" section="RestockManager"  />
+                            <add_player_choice_sub text="'\33' + $normalColor + {1134010, 1000} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" position="bottom_left" section="RestockManager"  comment="Upb Restock Fleet"/>
                         </do_else>
                         
                     </actions>
@@ -2192,24 +2192,101 @@
                         <debug_text text="'1 %s %s : entity = %s, %s , RFM? %s, @RFM %s'.[event.name, event.param, event.object, event.object.name, event.object.$RFM?, @event.object.$RFM]" />
                         -->
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
-                            <add_player_choice_sub text="'\33' + $normalColor + 'Enable Restock Fleet' + '\33X'" section="EnableRestockFleet" position="left"/>
+                            <add_player_choice_sub text="'\33' + $normalColor + {1001, 8986} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" section="csRFM_Enable" position="left" comment="Enable Restock Fleet"/>
+                            <add_player_choice_sub text="{1001, 8986} + ' ' + {1001, 7745} + ' ' + {1134010, 1010} " section="csRFM_fleets" position="bottom_left" comment="Enable From RFM"/>
                         </do_if>
                         
-                        <add_player_choice_sub text="'Options'" section="OpenRFMOptions" position="top_right"/>
-                        <add_player_choice_return text="'Back'" position="bottom_right"/>
+                        <add_player_choice_sub text="{1001, 1108}" section="csRFM_OpenLua" choiceparam="'manager'" position="top_left" comment="Management" />
+                        <add_player_choice_sub text="{1001, 3405}" section="csRFM_OpenLua" choiceparam="'options'" position="top_right" comment="Options"/>
+                        <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
                     </actions>
                 </cue>
-                <cue name="EnableRestock" instantiate="true" >
+
+                <cue name="Conversation_Menu_" instantiate="true" >
                     <conditions>
-                        <event_conversation_next_section section="EnableRestockFleet"/>
+                        <check_any>
+                            <event_conversation_next_section sectionprefix="csRFM_" />
+                            <event_conversation_returned_to_section sectionprefix="csRFM_" />
+                        </check_any>
                     </conditions>
                     <actions>
-                        <!-- param [ entity, singlestartup ]  -->
-                        <signal_cue_instantly cue="RF_Manager" param="[event.object, true]"/>
-                        <speak actor="event.object" line="2103"/>
-                        <play_sound object="player.entity" sound="Main.$EnableSoundId" />
+
+                        <do_if value="event.param == 'csRFM_Enable'">
+                            <!-- param [ entity, singlestartup ]  -->
+                            <signal_cue_instantly cue="RF_Manager" param="[event.object, true]"/>
+                            <speak actor="event.object" line="2103"/>
+                            <play_sound object="player.entity" sound="Main.$EnableSoundId" />
+                        </do_if>
+
+                        <do_elseif value="event.param == 'csRFM_OpenLua'">
+                            <run_actions ref="md.Upb_Restock_Fleet.SetInformationsToPlayer" >
+                                <param name="TableMode" value="event.param2" />
+                            </run_actions>
+                        </do_elseif>
+                        
+                        <do_elseif value="event.param == 'csRFM_fleets'">
+                            <set_value name="$fleetsKeyList" exact="[]"/>
+                            <set_value name="$RFMKey" exact="0" />
+                            <do_if value="@md.Upb_Restock_Fleet.Main.$RM_Fleets.keys.count">
+                                
+                                <set_value name="$fleetsKeyList" exact="md.Upb_Restock_Fleet.Main.$RM_Fleets.keys.list"/>
+                                <run_actions ref="Sort_ListKeys" result="$fleetsKeyList">
+                                    <param name="list" value="$fleetsKeyList" />
+                                </run_actions>
+
+                                <do_if value="event.param2 == 'rm_f_previous' and event.name == 'event_conversation_next_section'">
+                                    <set_value name="$rm_f_Page" operation="subtract"/>
+                                </do_if>
+                                <do_elseif value="event.param2 == 'rm_f_next' and event.name == 'event_conversation_next_section'">
+                                    <set_value name="$rm_f_Page" operation="add"/>
+                                </do_elseif>
+                                <do_elseif value="event.name == 'event_conversation_next_section'">
+                                    <set_value name="$rm_f_Page" exact="0"/>
+                                </do_elseif>
+
+                                <do_all exact="4" counter="$i">
+                                    <set_value name="$actual_rm_f_Item" exact="$i + (4 * $rm_f_Page)"/>
+                                    <do_if value="$fleetsKeyList.count lt $actual_rm_f_Item">
+                                        <break/>
+                                    </do_if>
+                                    <set_value name="$selRFMKey" exact="$fleetsKeyList.{$actual_rm_f_Item}"/>
+                                    
+                                    <set_value name="$selText" exact="'%s-RFM_%s_%s%s'.[
+                                    $actual_rm_f_Item, $selRFMKey, $RM_Fleets.{$selRFMKey}.$commander.$name,
+                                    if $RM_Fleets.{$selRFMKey}.$commander.$object != null then
+                                        ' (' + $RM_Fleets.{$selRFMKey}.$commander.$object.idcode + ')'
+                                    else ''
+                                    ]"/>
+                                    <add_player_choice_sub text="$selText" section="csRFM_fleetselected" choiceparam="$selRFMKey" position="$i" />
+                                    
+                                    <do_if value="$rm_f_Page == 0">
+                                        <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
+                                    </do_if>
+                                    <do_else>
+                                        <add_player_choice text="'Previous'" section="csRFM_fleets" choiceparam="'rm_f_previous'" position="bottom_right" />
+                                    </do_else>
+                                    <do_if value="$fleetsKeyList.count gt ((4 * $rm_f_Page) + 4)">
+                                        <add_player_choice text="{1001, 2962}" section="csRFM_fleets" choiceparam="'rm_f_next'" position="right" comment="Next"/>
+                                    </do_if>
+        
+                                </do_all>
+
+                            </do_if>
+                        </do_elseif>
+
+                        <do_elseif value="event.param == 'csRFM_fleetselected'">
+                            <add_player_choice text="{1001,2821}" section="csRFM_RFMConfirmed" position="top_left" choiceparam="event.param2" comment="Confirm"/>
+                            <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
+                        </do_elseif>
+
+                        <do_elseif value="event.param == 'csRFM_RFMConfirmed'">
+                            <set_value name="$RFMKey" exact="event.param2" />
+                            <debug_text text="'Selected Clone from RFMKey = %s'.[$RFMKey]" />
+                        </do_elseif>
+
                     </actions>
                 </cue>
+
                 <cue name="OpenRFMOptions" instantiate="true">
                     <conditions>
                         <event_conversation_next_section section="OpenRFMOptions"/>
@@ -4601,7 +4678,7 @@
             </actions>
         </library>
 
-        <!-- Verilen liste verilerini table key yaparak sıralar ve sıralı key listesini geri verir.
+        <!-- Verilen sayısal liste verilerini table key yaparak sıralar ve sıralı key listesini geri verir.
             IN  : list
             OUT : sorted list
         -->
