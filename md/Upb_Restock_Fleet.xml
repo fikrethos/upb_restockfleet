@@ -265,7 +265,11 @@
                             <param name="debugchance" value="0" />
                         </run_actions>
 
+                        
                         <open_conversation_menu menu="RFM_Menu" param="[0, 0, $RFMKey, $TableMode, global.$upbRF_DATA ]" param2="null"/>
+                        <!-- 
+                        <open_menu menu="RFM_Menu" param="[0, 0, $RFMKey, $TableMode, global.$upbRF_DATA ]" param2="null" />
+                        -->
                     </do_if>
                     
                 </do_if>
@@ -833,9 +837,9 @@
                     3-loadout yapısını değiştirmek istiyorsak record yapısında değişiklik yapacağız
                 -->
                 <!-- param [ entity, singlestartup, $oldfleet default null ]  -->
-                <!-- singlestartup ne olursa olsun manager parametresi false olacak şekilde başlatılacak. yazdırma ve lua haberleşmesini istemiyoruz.
+                <!-- burdaki singlestartup ne olursa olsun manager parametresi singlestartup false olacak şekilde başlatılacak. yazdırma ve lua haberleşmesini istemiyoruz.
                         singlestartup true ile çalışıyorsa planı ve yazdırma işini burda en son yapacağız
-                        singlestartup false ile çalışıyorsa debug yazdırma ve shipplan çıkarmaları tek seferde allreenable içinde yazacağız -->
+                        burdaki singlestartup false ile çalışıyorsa debug yazdırma ve shipplan çıkarmaları tek seferde allreenable içinde yazacağız -->
                 <set_value name="$oldRFMKey" exact="$RFMKey" />
                 <!-- Manager ilk boştaki key i bularak RFMKey oluşturuyor. Daha önce kapatılarak arada oluşan boş key olabilir.
                     Bu yüzden manager in oluşturacağı yeni keyi öğreniyoruz
@@ -1320,7 +1324,7 @@
             </params>
             <actions>
                 <!-- Update Defaults, Sonradan eklenecek değişkenler için resetleme kontrolü -->
-                <do_if value="not global.$upbRF_DATA.$Default.$v230?">
+                <do_if value="not global.$upbRF_DATA.$Default.$v231?">
                     <set_value name="$changedGlobalDefaults" />
                 </do_if>
 
@@ -1328,10 +1332,10 @@
                     <set_value name="global.$upbRF_DATA" exact="table[]"/>
                     <debug_text text="'RFM Globals Is Set to Defaults'.[]" />
                     <do_if value="$reset" exact="true">
-                        <show_help duration="7s" custom="'Reset upb Restock Fleet Manager, Globals Is Setting to Defaults'"/>
+                        <show_help duration="7s" custom="'%s %s. %s'.[readtext.{Main.$tPage}.{1320}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Reset Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
                     </do_if>
                     <do_else>
-                        <show_help duration="7s" custom="'Updated upb Restock Fleet Manager, Globals Is Setting to Defaults'"/>
+                        <show_help duration="7s" custom="'%s %s. %s'.[readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Updated Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
                     </do_else>
                     <remove_value name="$changedGlobalDefaults" />
                 </do_if>
@@ -1390,7 +1394,7 @@
 
                 <set_value name="global.$upbRF_DATA.$Default" exact="table
                 [
-                    $v230 = null ,
+                    $v231 = null ,
                     $shownotification       = false  ,
                     $showhelp               = true   ,
                     $write_to_logbook       = true   ,
@@ -1435,7 +1439,7 @@
                     $alertColor             = $alertcolors.{$alertlevels.$medium}    ,
                     $oldN                   = '#FF'+ 'c4ff0e' + '#'     , 
                     $oldA                   = '#FF'+ 'f37865' + '#'     , 
-                    $RMShipCaptionTag       = ' (RFM_$KEY$_) '
+                    $RMShipCaptionTag       = ' (' + Main.$RFMTag + '_$KEY$_) '
                 ]"/>
                 <!--   on = c4ff0e , oa = f37865   nn = 37b400 na = dcdc00 -->
                 <do_if value="not global.$upbRF_DATA.$Editing?">
@@ -1458,6 +1462,9 @@
         </library>
         <library name="GlobalConstants">
             <actions>
+
+                <set_value name="Main.$tPage" exact="1134010" />
+                <set_value name="Main.$RFMTag" exact="readtext.{Main.$tPage}.{500}" />
 
                 <run_actions ref="DefaultOptions">
                     <param name="reset" value="if $reset? then $reset else false" />
@@ -1744,7 +1751,10 @@
                         <do_if value="not $rEntry.$destroyedtime?" comment="since main. ver 3">
                             <set_value name="$rEntry.$destroyedtime" exact="null" />
                             <do_if value="$rEntry.$destroyed">
-                                <set_value name="$rEntry.$destroyedtime" exact="$rEntry.$reBuildStartTime" />
+                                <set_value name="$rEntry.$destroyedtime" exact="player.age" />
+                                <do_if value="$rEntry.$reBuildStartTime">
+                                    <set_value name="$rEntry.$destroyedtime" exact="$rEntry.$reBuildStartTime" />
+                                </do_if>
                             </do_if>
                             <do_if value="$affectedfleets.indexof.{$RFMKey} == 0">
                                 <append_to_list name="$affectedfleets" exact="$RFMKey" />
@@ -1801,6 +1811,83 @@
         </cue>
 
 
+        <library name="CloneRFM" purpose="run_actions">
+            <params>
+                <param name="CloneRFMKey" />
+                <param name="entity" />
+                <param name="IsSound" default="true" />
+                <param name="debugchance" default="0" />
+                <param name="deepdebug" default="0"/>
+            </params>
+            <actions>
+
+                <set_value name="$deepdebug" exact="100" />
+                <set_value name="$debugchance" exact="100" />
+                <set_value name="$tStr" exact="'                   '" />
+                <set_value name="$Records" exact="md.Upb_Restock_Fleet.Main.$FleetRecords.{$CloneRFMKey}.clone" />
+                <set_value name="$Loadouts" exact="md.Upb_Restock_Fleet.Main.$Loadouts.{$CloneRFMKey}.clone" />
+                
+                <run_actions ref="Get_New_RFMKey" result="$RFMKey"/>
+                <include_actions ref="Let_RFM_LogFileNames" />
+
+                <debug_text text="$tStr + '=== CLONNING RFM_%s ========= New RFM %s ========= [ START ] ==='.[$CloneRFMKey, $RFMKey]" chance="$deepdebug"/>
+
+                <debug_text text="$tStr + '  Entity &lt;%s&gt;%s , Entity.RFM FLAG %s'.[$entity, @$entity.name, if $entity.$RFM? then 'AKTİF' else 'YOK' ]" chance="$deepdebug"/>
+
+                <debug_text text="$tStr + '  Yeni Manager Başlatılıyor...'.[]" chance="$deepdebug" />
+                <!-- param [ entity, singlestartup (default true),  refFleetTable (default null) ] -->
+                <signal_cue_instantly cue="md.Upb_Restock_Fleet.RF_Manager" param="[$entity]"  />
+                
+                <do_for_each name="$sKey" valuename="$record" in="$Records">
+                    <do_if value="$record.$id gt 1">
+
+                        <set_value name="$record.$reBuildStartTime" exact="null" />
+                        <set_value name="$record.$reBuildTryNum" exact="0" />
+
+                        <set_value name="md.Upb_Restock_Fleet.Main.$FleetRecords.{$RFMKey}.{$record.$id}" exact="$record" />
+
+                        <run_actions ref="SetRecord_DestroyedObject">
+                            <param name="RFMKey" value="$RFMKey" />
+                            <param name="ShipKey" value="$record.$id" />
+                        </run_actions>
+                        
+                        <set_value name="md.Upb_Restock_Fleet.Main.$Loadouts.{$RFMKey}.{$record.$id}" exact="$Loadouts.{$record.$id}" />
+                        <append_to_list name="md.Upb_Restock_Fleet.Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$record.$id"/>
+                    </do_if>
+                </do_for_each>
+                <debug_text text="$tStr + '  Clone.Records Güncellendi...'.[]" chance="$deepdebug" />
+
+                <run_actions ref="Check_FleetLockStatus">
+                    <param name="RFMKey" value="$RFMKey" />
+                </run_actions>
+                
+                <!-- data change notification for open lua -->
+                <include_actions ref="Set_MDDataChanged" />
+
+                <!-- Debug -->
+                <set_value name="$pText" exact="'  ENABLED new RFM_%s with CLONE method, Age: %s, %s'.[$RFMKey, player.age, player.systemtime.{'%F-%X'}]"/>
+                <debug_to_file text="$pText" name="Main.$logTAG_Main" directory="Main.$logDIR" chance="Main.$DebugChance"/>
+                    <!-- DEBUG : RM_FLEETS File-->
+                <run_actions ref="Debug_RM_Fleets"/>
+                <!-- DEBUG : Fleet Record File -->
+                <run_actions ref="Debug_FleetRecord">
+                    <param name="RFMKey" value="$RFMKey" />
+                </run_actions>
+                <!-- DEBUG : ALL REBUILD CUES -->
+                <run_actions ref="Debug_AllRebuildCues"/>
+                <!-- DEBUG : REBUILD CUES -->
+                <run_actions ref="Debug_RebuildCue">
+                    <param name="RFMKey" value="$RFMKey" />
+                </run_actions>
+
+                <do_if value="$IsSound">
+                    <play_sound object="player.entity" sound="Main.$EnableSoundId" />
+                </do_if>
+
+                <debug_text text="'=== new RFM_%s CLONE COMPLETED =================== [  END  ] ==='.[$RFMKey]" chance="$deepdebug"/>
+    
+            </actions>
+        </library>
 
         <cue name="Main" version="14">
             <conditions>
@@ -1819,13 +1906,13 @@
                 <include_actions ref="GlobalPersistentVariables" />
                 
                 <do_if value="@event.param == 'Reset' ">
-                    <show_help duration="5s" custom="'Update Complete Restock Fleet Manager'"/>
+                    <show_help duration="5s" custom="'%s %s'.[readtext.{Main.$tPage}.{1320}, readtext.{Main.$tPage}.{1}]" comment="Updated Upb Restock Fleet Manager"/>
                     <debug_to_file text="'- %s - - - - - - - U P D A T E - - - R E S E T - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_Main" directory="$logDIR" append="false" chance="$DebugChance"/>
                     <debug_to_file text="'- %s - - - - - - - U P D A T E - - - R E S E T - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_RebuildCues" directory="$logDIR" append="false" chance="$DebugChance"/>
                     <debug_to_file text="'- %s - - - - - - - U P D A T E - - - R E S E T - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_RFMleets" directory="$logDIR" append="false" chance="$DebugChance"/>
                 </do_if>
                 <do_else>
-                    <show_help duration="5s" custom="'Installed Restock Fleet Manager'"/>
+                    <show_help duration="5s" custom="'%s %s'.[readtext.{Main.$tPage}.{1300}, readtext.{Main.$tPage}.{1}]" comment="Installed Upb Restock Fleet Manager"/>
                     <debug_to_file text="'- %s - - - - - - - I N S T A L L - - - - - - - - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_Main" directory="$logDIR" append="false" chance="$DebugChance"/>
                     <debug_to_file text="'- %s - - - - - - - I N S T A L L - - - - - - - - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_RebuildCues" directory="$logDIR" append="false" chance="$DebugChance"/>
                     <debug_to_file text="'- %s - - - - - - - I N S T A L L - - - - - - - - - - - Age: %s, %s - -'.[player.age, player.systemtime.{'%F-%X'}, this]" name="$logTAG_RFMleets" directory="$logDIR" append="false" chance="$DebugChance"/>
@@ -1837,7 +1924,7 @@
                 <include_actions ref="GlobalConstants" />
                 <signal_cue_instantly cue="Check_Records" />
                 <run_actions ref="ReEnable_All_RFM" />
-                <show_help duration="5s" custom="'Restock Fleet Update Complete'"/>
+                <show_help duration="5s" custom="'%s %s %s'.[readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1330}]" comment="Upb Restock Fleet Manager Update Complete"/>
             </patch>
             <patch sinceversion="3">
                 <debug_text text="'RFM PROGRAM  Main START sinceversion=3'" />
@@ -1845,7 +1932,7 @@
                 <signal_cue_instantly cue="Check_Records" />
                 <!-- param  updateloadouts (default false) isChangeCrewAmounts (default false)        -->
                 <run_actions ref="ReEnable_All_RFM" />
-                <show_help duration="7s" custom="'Restock Fleets Update Complete'"/>
+                <show_help duration="5s" custom="'%s %s %s'.[readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1330}]" comment="Upb Restock Fleet Manager Update Complete"/>
             </patch>
             <patch sinceversion="4">
                 <debug_text text="'RFM PROGRAM  Main START sinceversion=4'" />
@@ -1856,7 +1943,7 @@
                     <param name="updateloadouts" value="true" />
                     <param name="isChangeCrewAmounts" value="true" />
                 </run_actions>
-                <show_help duration="7s" custom="'Restock Fleets Update Complete'"/>
+                <show_help duration="5s" custom="'%s %s %s'.[readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1330}]" comment="Upb Restock Fleet Manager Update Complete"/>
             </patch>
             <!-- BlacklistStation olayı getirildi
                 record yapsındaki objectid propertysi idcode şekline dönüştürüldü
@@ -1956,7 +2043,7 @@
                 <!-- RFM Cue yapısı güncelle -->
                 <!-- param  updateloadouts (default false) isChangeCrewAmounts (default false)        -->
                 <run_actions ref="ReEnable_All_RFM" />
-                <show_help duration="7s" custom="'Restock Fleets Update Complete'"/>
+                <show_help duration="5s" custom="'%s %s %s'.[readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1330}]" comment="Upb Restock Fleet Manager Update Complete"/>
 
             </patch>
             <!-- destroyedShipKeys listeleri düzeltildi
@@ -2049,9 +2136,10 @@
                                 </check_any>
                             </conditions>
                             <actions>
-                                <debug_text text="'RFM PROGRAM - SetConfigVars_RESET - BAŞLADI -  &lt;' + event.name + '&gt; , object = ' + @event.object.name + ', param = ' + @event.param " chance="$DebugChance" />
+                                
+                                <debug_text text="'RFM PROGRAM - SetConfigVars_RESET - BAŞLADI -  &lt;%s&gt; , object = %s , param = %s'.[event.name, @event.object.name, @event.param]" chance="$DebugChance" />
                                 <include_actions ref="GlobalConstants" />
-                                <debug_to_file text="'- GAME %s Cue[%s] Genel Değişkenler yüklendi.. -  Age: %s, %s'.[event.name, this.name, player.age, player.systemtime.{'%F-%X'}]" name="$logTAG_Main" directory="$logDIR" chance="$DebugChance" append="false"/>
+                                <debug_to_file text="'- GAME %s Cue[%s] Genel Değişkenler yüklendi.. -  Age: %s, %s , textPage = %s'.[event.name, this.name, player.age, player.systemtime.{'%F-%X'}, $tPage]" name="$logTAG_Main" directory="$logDIR" chance="$DebugChance" append="false"/>
 
                                 <signal_cue_instantly cue="Debug_FilesReset_Main" />
                                 <reset_cue cue="SetConfigVars"/>
@@ -2072,7 +2160,7 @@
                         </check_any>
                     </conditions>
                     <actions>
-                        <show_help duration="1s" custom="'Restock Manager Fleet DEBUG DUMP'"/>
+                        <show_help duration="5s" custom="'%s %s'.[readtext.{Main.$tPage}.{1}, 'DEBUG DUMP']" comment="Upb Restock Fleet Manager DEBUG DUMP"/>
                         <debug_to_file text="'Restock Manager Fleet DEBUG DUMP  Age: %s, %s'.[player.age, player.systemtime.{'%F-%X'}]" name="Main.$logTAG_DumpDebug" directory="Main.$logDIR" append="false" chance="Main.$DebugChance" />
                         <debug_to_file text="'- - - - - - - - - M A I N - - - - - - - - - - - - - - - - -'" name="Main.$logTAG_DumpDebug" directory="Main.$logDIR" chance="Main.$DebugChance" />
                         <!-- DEBUG : RM_FLEETS File-->
@@ -2104,6 +2192,8 @@
                 </cue>
 
                 <!-- RUNNING CODE-->
+
+                <!-- Conversations -->
                 <cue name="Conversation_menu_entrance_universal_ai" instantiate="true" >
                     <conditions>
                         <check_any>
@@ -2175,8 +2265,7 @@
                     </actions>
                 </cue>
         
-                
-                <cue name="Conversation_Menu_RestockManager" instantiate="true" >
+                <cue name="Conversation_Menu_Main" instantiate="true" >
                     <conditions>
                         <check_any>
                             <event_conversation_next_section section="RestockManager"/>
@@ -2192,17 +2281,21 @@
                         <debug_text text="'1 %s %s : entity = %s, %s , RFM? %s, @RFM %s'.[event.name, event.param, event.object, event.object.name, event.object.$RFM?, @event.object.$RFM]" />
                         -->
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
-                            <add_player_choice_sub text="'\33' + $normalColor + {1001, 8986} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" section="csRFM_Enable" position="left" comment="Enable Restock Fleet"/>
-                            <add_player_choice_sub text="{1001, 8986} + ' ' + {1001, 7745} + ' ' + {1134010, 1010} " section="csRFM_fleets" position="bottom_left" comment="Enable From RFM"/>
+                            <add_player_choice_sub text="'\33' + $normalColor + readtext.{Main.$tPage}.{1020} + ' ' + readtext.{Main.$tPage}.{1030} + ' ' + readtext.{Main.$tPage}.{1040} + '\33X'" section="csRFM_Enable" position="left" comment="Enable Restock Fleet"/>
+                            <set_value name="$selectable" exact="true"/>
+                            <do_if value="event.object.assignedcontrolled.subordinates.count">
+                                <set_value name="$selectable" exact="false"/>
+                            </do_if>
+                            <add_player_choice_sub text="readtext.{Main.$tPage}.{1020} + ' ' + readtext.{Main.$tPage}.{1080} + ' ' + readtext.{Main.$tPage}.{1010} " selectable="$selectable" section="csRFM_fleets" position="right" comment="Enable From RFM"/>
                         </do_if>
                         
-                        <add_player_choice_sub text="{1001, 1108}" section="csRFM_OpenLua" choiceparam="'manager'" position="top_left" comment="Management" />
-                        <add_player_choice_sub text="{1001, 3405}" section="csRFM_OpenLua" choiceparam="'options'" position="top_right" comment="Options"/>
-                        <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
+                        <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}" section="csRFM_OpenLua" choiceparam="'manager'" position="top_left" comment="Management" />
+                        <add_player_choice_sub text="readtext.{Main.$tPage}.{1060}" section="csRFM_OpenLua" choiceparam="'options'" position="top_right" comment="Options"/>
+                        <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                     </actions>
                 </cue>
 
-                <cue name="Conversation_Menu_" instantiate="true" >
+                <cue name="Conversation_Menu_Sections" instantiate="true" >
                     <conditions>
                         <check_any>
                             <event_conversation_next_section sectionprefix="csRFM_" />
@@ -2226,7 +2319,6 @@
                         
                         <do_elseif value="event.param == 'csRFM_fleets'">
                             <set_value name="$fleetsKeyList" exact="[]"/>
-                            <set_value name="$RFMKey" exact="0" />
                             <do_if value="@md.Upb_Restock_Fleet.Main.$RM_Fleets.keys.count">
                                 
                                 <set_value name="$fleetsKeyList" exact="md.Upb_Restock_Fleet.Main.$RM_Fleets.keys.list"/>
@@ -2251,8 +2343,8 @@
                                     </do_if>
                                     <set_value name="$selRFMKey" exact="$fleetsKeyList.{$actual_rm_f_Item}"/>
                                     
-                                    <set_value name="$selText" exact="'%s-RFM_%s_%s%s'.[
-                                    $actual_rm_f_Item, $selRFMKey, $RM_Fleets.{$selRFMKey}.$commander.$name,
+                                    <set_value name="$selText" exact="'%s-%s_%s_%s%s'.[
+                                    $actual_rm_f_Item, Main.$RFMTag, $selRFMKey, $RM_Fleets.{$selRFMKey}.$commander.$name,
                                     if $RM_Fleets.{$selRFMKey}.$commander.$object != null then
                                         ' (' + $RM_Fleets.{$selRFMKey}.$commander.$object.idcode + ')'
                                     else ''
@@ -2260,43 +2352,42 @@
                                     <add_player_choice_sub text="$selText" section="csRFM_fleetselected" choiceparam="$selRFMKey" position="$i" />
                                     
                                     <do_if value="$rm_f_Page == 0">
-                                        <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
+                                        <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                     </do_if>
                                     <do_else>
-                                        <add_player_choice text="'Previous'" section="csRFM_fleets" choiceparam="'rm_f_previous'" position="bottom_right" />
+                                        <add_player_choice text="readtext.{Main.$tPage}.{1071}" section="csRFM_fleets" choiceparam="'rm_f_previous'" position="bottom_right" comment="Previous"/>
                                     </do_else>
                                     <do_if value="$fleetsKeyList.count gt ((4 * $rm_f_Page) + 4)">
-                                        <add_player_choice text="{1001, 2962}" section="csRFM_fleets" choiceparam="'rm_f_next'" position="right" comment="Next"/>
+                                        <add_player_choice text="readtext.{Main.$tPage}.{1072}" section="csRFM_fleets" choiceparam="'rm_f_next'" position="right" comment="Next"/>
                                     </do_if>
         
                                 </do_all>
-
                             </do_if>
+                            <do_else>
+                                <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
+                            </do_else>
                         </do_elseif>
 
                         <do_elseif value="event.param == 'csRFM_fleetselected'">
                             <add_player_choice text="{1001,2821}" section="csRFM_RFMConfirmed" position="top_left" choiceparam="event.param2" comment="Confirm"/>
-                            <add_player_choice_return text="{1001, 2669}" position="bottom_right" comment="Back"/>
+                            <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                         </do_elseif>
 
                         <do_elseif value="event.param == 'csRFM_RFMConfirmed'">
-                            <set_value name="$RFMKey" exact="event.param2" />
-                            <debug_text text="'Selected Clone from RFMKey = %s'.[$RFMKey]" />
+                            <run_actions ref="CloneRFM">
+                                <param name="CloneRFMKey" value="event.param2" />
+                                <param name="entity" value="event.object" />
+                                <param name="IsSound" value="true" />
+                                <param name="debugchance" value="Main.$DebugChance" />
+                                <param name="deepdebug" value="Main.$DeepDebug" />
+                            </run_actions>
                         </do_elseif>
 
                     </actions>
                 </cue>
 
-                <cue name="OpenRFMOptions" instantiate="true">
-                    <conditions>
-                        <event_conversation_next_section section="OpenRFMOptions"/>
-                    </conditions>
-                    <actions>
-                        <run_actions ref="md.Upb_Restock_Fleet.SetInformationsToPlayer" >
-                            <param name="TableMode" value="'options'" />
-                        </run_actions>
-                    </actions>
-                </cue>
+
+
 
                 <!-- Bu Eventi sadece lua açıkken oyuncunun anlık değişimi yakalaması için yazıldı
                     AddConstructToBuild zamanı zaten son güncel istasyon listesini alarak işe başlıyacağız
@@ -2429,30 +2520,7 @@
                 -->
                 <cue name="RF_Manager" instantiate="true" namespace="this">
                     <conditions>
-                        <check_any>
-                            <check_all>
-                                <event_cue_signalled/>
-                                <!-- 
-                                <check_value value="event.param.{1} == null" />
-                                <check_value value="@event.param.{2} == false" />
-                                <check_value value="event.param.{3}?" />
-                                -->
-                            </check_all>
-                            <check_all>
-                                <event_cue_signalled/>
-                                <!-- 
-                                <check_value value="@event.param.{1}.isclass.entity"/>
-                                
-                                <check_any>
-                                    <check_value value="@event.param.{1}.assignedcontrolled.isclass.ship and (event.param.{1}.assignedcontrolled.pilot == event.param.{1} or event.param.{1}.assignedcontrolled.pilot == player.entity)" />
-                                    <check_value value="@event.param.{1}.assignedcontrolled.isclass.station and event.param.{1}.assignedcontrolled.tradenpc == event.param.{1}" />
-                                </check_any>
-                                
-                                <check_value value="event.param.{1}.isplayerowned and event.param.{1}.assignedcontrolled.isplayerowned" />
-                                <check_value value="not event.param.{1}.$RFM?"/>
-                                -->
-                            </check_all>
-                        </check_any>
+                        <event_cue_signalled/>
                     </conditions>
                     <actions>
 
@@ -2711,12 +2779,12 @@
                                 <!-- 
                                 <debug_text text="'2 event.name = %s, param = %s, param2 = %s, param3 = %s '.[event.name, @event.param, @event.param2, @event.param3]" />
                                 -->
-                                <add_player_choice_sub text="'Manager'" position="top_left" section="cSO_RFM_Manager"/>
-                                <add_player_choice_sub text="'Options'" position="top_right" section="cSO_RFM_Options"/>
+                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}" position="top_left" section="cSO_RFM_Manager" comment="Management"/>
+                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1060}" position="top_right" section="cSO_RFM_Options" comment="Options"/>
                                 
-                                <add_player_choice_sub text="'More 1'" position="bottom_left" section="cSO_RFM_More_1" />
+                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1090} + ' ' + readtext.{Main.$tPage}.{1101}" position="bottom_left" section="cSO_RFM_More_1" comment="More 1"/>
                                 
-                                <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
 
                             </actions>
                         </cue>
@@ -2734,11 +2802,11 @@
                                 -->
                                 <do_if value="event.param == 'cSO_RFM_More_1'">
 
-                                    <add_player_choice_sub text="'Produce for Lost Ships'" position="top_left" section="cSO_RFM_LostShips"/>
+                                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1200}" position="top_left" section="cSO_RFM_LostShips" comment="Produce for Lost Ships"/>
                                     
-                                    <add_player_choice_sub text="'More 2'" position="bottom_left" section="cSO_RFM_More_2" />
+                                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1090} + ' ' + readtext.{Main.$tPage}.{1102}" position="bottom_left" section="cSO_RFM_More_2"  comment="More 2"/>
                                     
-                                    <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                    <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                     
                                 </do_if>
 
@@ -2753,27 +2821,29 @@
 
                                     <set_value name="$CS" exact="'\33' + (if md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count gt 0 then md.Upb_Restock_Fleet.Main.$alertColor else md.Upb_Restock_Fleet.Main.$normalColor)" />
                                     <set_value name="$CE" exact="'\33X'" />
-                                    <add_player_choice_sub text="'[ # ' + $CS +  md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count + $CE + ' ]' + ' - ' + 'Restart RFM_' + $RFMKey "  position="top_left" section="cSO_RFM_ReEnable"/>
-                                    <add_player_choice text="'Disable RFM_' + $RFMKey + ' - ' + '[ # ' + $CS +  md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count + $CE + ' ]' "  position="top_right" section="cSO_RFM_Disable"/>
-        
+                                    
+                                    <add_player_choice_sub text="'[ # %s%s%s ] - %s %s_%s'.[$CS, md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count, $CE, readtext.{Main.$tPage}.{1022}, Main.$RFMTag, $RFMKey]"  position="top_left" section="cSO_RFM_ReEnable" comment="Restart RFM_xx"/>
+                                    <add_player_choice text="'%s %s_%s - [ # %s%s%s ]'.[readtext.{Main.$tPage}.{1021}, Main.$RFMTag, $RFMKey, $CS, md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count, $CE]"  position="top_right" section="cSO_RFM_Disable" comment="Disable RFM_xx"/>
+
                                     <set_value name="$CS" exact="'\33' + $color" />
-                                    <add_player_choice_sub text="$CS + 'Restart All RFM Fleets' + $CE"  position="left" section="cSO_RFM_AllReEnable"/>
-                                    <add_player_choice text="$CS + 'Disable All RFM Fleets' + $CE"  position="bottom_left" section="cSO_RFM_AllDisable"/>
+                                    <add_player_choice_sub text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1110}, $CE ]"  position="left" section="cSO_RFM_AllReEnable" comment="Restart All Fleets"/>
+                                    <add_player_choice text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1120}, $CE ]"  position="bottom_left" section="cSO_RFM_AllDisable" comment="Disable All Fleets"/>
+
                                     <remove_value name="$CS" />
                                     <remove_value name="$CE" />
                                     <remove_value name="$color" />
-                                    <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                    <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                 </do_if>
 
                                 <do_elseif value="event.param == 'cSO_RFM_ReEnable'">
                                     <!-- param : $RFMKey Or a list [ $RFMKey, $IsSound (default false)  ]-->
                                     <signal_cue_instantly cue="Re_Enable_RFM" param="[ $RFMKey, true ]" />
-                                    <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                    <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                 </do_elseif>
             
                                 <do_elseif value="event.param == 'cSO_RFM_AllReEnable'">
                                     <run_actions ref="ReEnable_All_RFM" />
-                                    <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                    <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                 </do_elseif>
 
                                 <do_elseif value="event.param == 'cSO_RFM_AllDisable'" >
@@ -2833,8 +2903,8 @@
                                         <set_value name="$selKey" exact="$deadShips.{$actualRow}"/>
 
                                         <debug_text text="'\n
-                                                        RFM %s_%s Table.Exist %s, .build = %s \n
-                                                        %s.$cue .$Build %s, .exists = %s, .state = %s \n'.[$RFMKey, $selKey, 
+                                                        %s_%s_%s Table.Exist %s, .build = %s \n
+                                                        %s.$cue .$Build %s, .exists = %s, .state = %s \n'.[Main.$RFMTag, $RFMKey, $selKey, 
                                         Main.$RebuildCues.{$RFMKey}.{$selKey}?,
                                         @Main.$RebuildCues.{$RFMKey}.{$selKey}.$build,
                                         @Main.$RebuildCues.{$RFMKey}.{$selKey}.$cue,
@@ -2850,19 +2920,19 @@
                                             <set_value name="$Build" exact="Main.$RebuildCues.{$RFMKey}.{$selKey}.$build"/>
                                         </do_elseif>
 
-                                        <add_player_choice_sub text="$actualRow + '-' + Main.$FleetRecords.{$RFMKey}.{$selKey}.$name + (if Main.$DebugChance == 100 then ' (' + $selKey + ')' else '')" 
+                                        <add_player_choice_sub text="'%s - %s%s'.[$actualRow, Main.$FleetRecords.{$RFMKey}.{$selKey}.$name, if Main.$DebugChance == 100 then ' (' + $selKey + ')' else '']" 
                                         selectable="not $Build.exists" section="cSO_RFM_LostShips_Selected" choiceparam="$selKey" position="$i" />
 
                                     </do_all>
 
                                     <do_if value="$rPage == 0">
-                                        <add_player_choice_return position="bottom_right" text="'Back'"/>
+                                        <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                                     </do_if>
                                     <do_else>
-                                        <add_player_choice text="'Previous page'" section="cSO_RFM_LostShips" choiceparam="'rprevious'" position="bottom_right" />
+                                        <add_player_choice text="readtext.{Main.$tPage}.{1071}" section="cSO_RFM_LostShips" choiceparam="'rprevious'" position="bottom_right" comment="Previous"/>
                                     </do_else>
                                     <do_if value="$deadShips.count gt ((4 * $rPage) + 4)">
-                                        <add_player_choice text="'Next page'" section="cSO_RFM_LostShips" choiceparam="'rnext'" position="right"/>
+                                        <add_player_choice text="readtext.{Main.$tPage}.{1072}" section="cSO_RFM_LostShips" choiceparam="'rnext'" position="right" comment="Next"/>
                                     </do_if>
 
                                     <remove_value name="$deadShips" />
@@ -2881,8 +2951,8 @@
                                         <param name="debugchance" value="Main.$DeepDebug" />
                                     </run_actions>
 
-                                    <add_player_choice text="'Production signal sent..'" selectable="false" section="" position="top_left"/>
-                                    <add_player_choice_return position="bottom_right" text="'Back'" />
+                                    <add_player_choice text="readtext.{Main.$tPage}.{1210}" selectable="false" section="" position="top_left"/>
+                                    <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
 
                                 </do_elseif>
 
@@ -3406,14 +3476,13 @@
                                     <debug_to_file text="'RFM_%s_( %s ) DESTROYED &lt;%s&gt;, %s RFM_%s_PromotedCommander&lt;%s&gt;, Commander&lt;%s&gt;,  Destroyed Ship&lt;%s&gt;  Age: %s, %s'.[$RFMKey, $fleetshipsByComp.{event.object}, $eventStatus, player.age, $RFMKey, $PromotedCommander, $RMCommander, event.object, player.age, player.systemtime.{'%F-%X'}]" name="Main.$logTAG_Main" directory="Main.$logDIR" chance="Main.$DebugChance"/>
                                     <debug_to_file text="'( %s ) DESTROYED &lt;%s&gt;, RFM_%s_PromotedCommander&lt;%s&gt;, Commander&lt;%s&gt;,  Destroyed Ship&lt;%s&gt;  Age: %s, %s'.[$fleetshipsByComp.{event.object}, $eventStatus, $RFMKey, $PromotedCommander, $RMCommander, event.object, player.age, player.systemtime.{'%F-%X'}]" name="$Command_logF" directory="Main.$logDIR" chance="Main.$DebugChance"/>
 
-
                                     <do_if value="$TopLevelCommanderDie">
                                         <do_if value="$Ship_IDX == 1" comment="Gerçek fleet commander öldü">
                                             <set_value name="Main.$RM_Fleets.{$RFMKey}.$commander.$object" exact="null"/>
-                                            <set_value name="$capText" exact="'\033' + 'R' + 'Destroyed RFM_' + $RFMKey + '_ Commander' + '\033X'" />
+                                            <set_value name="$capText" exact="'\033' + 'R' + 'Destroyed '+ Main.$RFMTag + '_' + $RFMKey + '_ Commander' + '\033X'" />
                                         </do_if>
                                         <do_else>
-                                            <set_value name="$capText" exact="'\033' + 'O' + 'Destroyed RFM_' + $RFMKey + '_  Commander' + '\033X'" />
+                                            <set_value name="$capText" exact="'\033' + 'O' + 'Destroyed '+ Main.$RFMTag + '_' + $RFMKey + '_  Commander' + '\033X'" />
                                         </do_else>
                                     </do_if>
                                     <do_else>
@@ -3443,10 +3512,10 @@
                                     <remove_value name="$fleetshipsByIdx.{$fleetshipsByComp.{event.object}}"/>
                                     <remove_value name="$fleetshipsByComp.{event.object}"/>
 
-                                    <set_value name="Main.$FleetRecords.{$RFMKey}.{$Ship_IDX}.$object" exact="null"/>
-                                    <set_value name="Main.$FleetRecords.{$RFMKey}.{$Ship_IDX}.$idcode" exact="''"/>
-                                    <set_value name="Main.$FleetRecords.{$RFMKey}.{$Ship_IDX}.$destroyed" exact="true"/>
-                                    <set_value name="Main.$FleetRecords.{$RFMKey}.{$Ship_IDX}.$destroyedtime" exact="player.age"/>
+                                    <run_actions ref="SetRecord_DestroyedObject">
+                                        <param name="RFMKey" value="$RFMKey" />
+                                        <param name="ShipKey" value="$Ship_IDX" />
+                                    </run_actions>
 
                                     <run_actions ref="Check_FleetLockStatus">
                                         <param name="RFMKey" value="$RFMKey" />
@@ -4162,6 +4231,19 @@
         </cue>
 
 
+
+        <library name="SetRecord_DestroyedObject" purpose="run_actions">
+            <params>
+                <param name="RFMKey" />
+                <param name="ShipKey" />
+            </params>
+            <actions>
+                <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$object" exact="null"/>
+                <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$idcode" exact="''"/>
+                <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$destroyed" exact="true"/>
+                <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$destroyedtime" exact="player.age"/>
+            </actions>
+        </library>
 
 
         <!-- YAPILACAK -->
