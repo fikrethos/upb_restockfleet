@@ -5,8 +5,8 @@
         * 
         1- Üretilen gemi mürettebatının record zamanı rütbeler ile klonlanıp klonlanmayacağı ayarlarla belirlendi.
         2- Faction relation change kodundaki hata giderildi.
-        3- RFM'lerin klonlanabilme özelliği eklendi.
-        4- 
+        3- Yeni açılacak RFM için Mevcut RFM'lerden kayıt devralma özelliği eklendi.
+        4- Manager ekranına rfm klonlama butonu kondu.
         
         
     -->
@@ -307,6 +307,16 @@
                     </run_actions>
                 </do_elseif>
 
+                <do_elseif value="event.param2 == 'RFMClone'">
+                    <run_actions ref="CloneRFM">
+                        <param name="CloneRFMKey" value="event.param3.{1}" />
+                        <param name="entity" value="null" />
+                        <param name="IsSound" value="true" />
+                        <param name="debugchance" value="Main.$DebugChance" />
+                        <param name="deepdebug" value="Main.$DeepDebug" />
+                    </run_actions>
+                </do_elseif>
+                
                 <do_elseif value="event.param2 == 'RemoveShip'">
                     <run_actions ref="Remove_DestroyedShipRecord" >
                         <param name="RFMKey" value="event.param3.{1}" />
@@ -1324,7 +1334,7 @@
             </params>
             <actions>
                 <!-- Update Defaults, Sonradan eklenecek değişkenler için resetleme kontrolü -->
-                <do_if value="not global.$upbRF_DATA.$Default.$v231?">
+                <do_if value="not global.$upbRF_DATA.$Default.$v232?">
                     <set_value name="$changedGlobalDefaults" />
                 </do_if>
 
@@ -1394,7 +1404,7 @@
 
                 <set_value name="global.$upbRF_DATA.$Default" exact="table
                 [
-                    $v231 = null ,
+                    $v232 = null ,
                     $shownotification       = false  ,
                     $showhelp               = true   ,
                     $write_to_logbook       = true   ,
@@ -1412,6 +1422,7 @@
                     $moneystep                  = 100000        ,
                     $maxmoney                   = 100000000     ,
                     $personnelcloning           = false     ,
+                    $autobuildafterclone        = false     ,
                     $DebugChance                = 0         ,
                     $DeepDebug                  = 0         ,
                     $ChangesOnFleetDebug        = 0         ,
@@ -1814,33 +1825,38 @@
         <library name="CloneRFM" purpose="run_actions" namespace="this">
             <params>
                 <param name="CloneRFMKey" />
-                <param name="entity" />
+                <param name="entity" default="null"/>
                 <param name="IsSound" default="true" />
                 <param name="debugchance" default="0" />
                 <param name="deepdebug" default="0"/>
             </params>
             <actions>
 
-                <set_value name="$deepdebug" exact="100" />
-                <set_value name="$debugchance" exact="100" />
                 <set_value name="$tStr" exact="'                   '" />
+                <set_value name="$Fleet" exact="Main.$RM_Fleets.{$CloneRFMKey}.clone" />
                 <set_value name="$Records" exact="Main.$FleetRecords.{$CloneRFMKey}.clone" />
                 <set_value name="$Loadouts" exact="Main.$Loadouts.{$CloneRFMKey}.clone" />
                 
                 <run_actions ref="Get_New_RFMKey" result="$RFMKey"/>
                 <include_actions ref="Let_RFM_LogFileNames" />
 
-                <debug_text text="$tStr + '=== CLONNING RFM_%s ========= New RFM %s ========= [ START ] ==='.[$CloneRFMKey, $RFMKey]" chance="$deepdebug"/>
+                <debug_text text="$tStr + '=== CLONNING RFM_%s ========= New RFM_%s ========= [ START ] ==='.[$CloneRFMKey, $RFMKey]" chance="$deepdebug"/>
 
-                <debug_text text="$tStr + '  Entity &lt;%s&gt;%s , Entity.RFM FLAG %s'.[$entity, @$entity.name, if $entity.$RFM? then 'AKTİF' else 'YOK' ]" chance="$deepdebug"/>
+                <debug_text text="$tStr + '  Entity &lt;%s&gt;%s , Entity.RFM FLAG %s'.[if $entity != null then $entity else 'YOK', $entity != null then $entity.name else '', if $entity.$RFM? then 'AKTİF' else 'YOK' ]" chance="$deepdebug"/>
 
                 <debug_text text="$tStr + '  Yeni Manager Başlatılıyor...'.[]" chance="$deepdebug" />
+                <!-- $entity yoksa tam bir klonlama olacak -->
                 <!-- param [ entity, singlestartup (default true),  refFleetTable (default null) ] -->
-                <signal_cue_instantly cue="md.Upb_Restock_Fleet.RF_Manager" param="[$entity]"  />
+                <signal_cue_instantly cue="RF_Manager" param="[$entity, if $entity == null then false else true, if $entity == null then $Fleet else null]"  />
+
+                <do_if value="$entity == null">
+                    <set_value name="Main.$RM_Fleets.{$RFMKey}.$commander.$object"  exact="null"/>
+                    <set_value name="Main.$RM_Fleets.{$RFMKey}.$object" exact="null"/>
+                    <set_value name="Main.$RM_Fleets.{$RFMKey}.$name"   exact="''"/>
+                </do_if>
                 
                 <do_for_each name="$sKey" valuename="$record" in="$Records">
-                    <do_if value="$record.$id gt 1">
-
+                    <do_if value="($record.$id gt 1) or ($entity == null) ">
                         <set_value name="Main.$FleetRecords.{$RFMKey}.{$record.$id}" exact="$record.clone" />
 
                         <run_actions ref="SetRecord_DestroyedObject">
@@ -1856,34 +1872,43 @@
                 </do_for_each>
                 <debug_text text="$tStr + '  Clone.Records Güncellendi...'.[]" chance="$deepdebug" />
 
-                <run_actions ref="Check_FleetLockStatus">
-                    <param name="RFMKey" value="$RFMKey" />
-                </run_actions>
+                <do_if value="global.$upbRF_DATA.$Editing.$autobuildafterclone">
+                    <!-- param : $RFMKey Or a list [ $RFMKey, $IsSound (default false) , $singlestartup (default true ), $updateloadouts (default false ), $isChangeCrewAmounts (default false) ]-->
+                    <debug_text text="$tStr + '  Clone_%s Yeniden Başlatılıyor...'.[$RFMKey]" chance="$deepdebug" />
+                    <signal_cue_instantly cue="Re_Enable_RFM" param="$RFMKey" />
+                </do_if>
+                <do_else>
+                    <run_actions ref="Check_FleetLockStatus">
+                        <param name="RFMKey" value="$RFMKey" />
+                    </run_actions>
                 
-                <!-- data change notification for open lua -->
-                <include_actions ref="Set_MDDataChanged" />
+                    <!-- data change notification for open lua -->
+                    <include_actions ref="Set_MDDataChanged" />
 
-                <!-- Debug -->
-                <set_value name="$pText" exact="'  ENABLED new RFM_%s with CLONE method, Age: %s, %s'.[$RFMKey, player.age, player.systemtime.{'%F-%X'}]"/>
-                <debug_to_file text="$pText" name="Main.$logTAG_Main" directory="Main.$logDIR" chance="Main.$DebugChance"/>
-                    <!-- DEBUG : RM_FLEETS File-->
-                <run_actions ref="Debug_RM_Fleets"/>
-                <!-- DEBUG : Fleet Record File -->
-                <run_actions ref="Debug_FleetRecord">
-                    <param name="RFMKey" value="$RFMKey" />
-                </run_actions>
-                <!-- DEBUG : ALL REBUILD CUES -->
-                <run_actions ref="Debug_AllRebuildCues"/>
-                <!-- DEBUG : REBUILD CUES -->
-                <run_actions ref="Debug_RebuildCue">
-                    <param name="RFMKey" value="$RFMKey" />
-                </run_actions>
+                    <!-- Debug -->
+                    <set_value name="$pText" exact="'  ENABLED new RFM_%s with CLONE method, Age: %s, %s'.[$RFMKey, player.age, player.systemtime.{'%F-%X'}]"/>
+                    <debug_to_file text="$pText" name="Main.$logTAG_Main" directory="Main.$logDIR" chance="Main.$DebugChance"/>
+                        <!-- DEBUG : RM_FLEETS File-->
+                    <run_actions ref="Debug_RM_Fleets"/>
+                    <!-- DEBUG : Fleet Record File -->
+                    <run_actions ref="Debug_FleetRecord">
+                        <param name="RFMKey" value="$RFMKey" />
+                    </run_actions>
+                    <!-- DEBUG : ALL REBUILD CUES -->
+                    <run_actions ref="Debug_AllRebuildCues"/>
+                    <!-- DEBUG : REBUILD CUES -->
+                    <run_actions ref="Debug_RebuildCue">
+                        <param name="RFMKey" value="$RFMKey" />
+                    </run_actions>
+                
+                </do_else>
+                
 
                 <do_if value="$IsSound">
                     <play_sound object="player.entity" sound="Main.$EnableSoundId" />
                 </do_if>
 
-                <debug_text text="'=== new RFM_%s CLONE COMPLETED =================== [  END  ] ==='.[$RFMKey]" chance="$deepdebug"/>
+                <debug_text text="'=== New RFM_%s CLONE COMPLETED =================== [  END  ] ==='.[$RFMKey]" chance="$deepdebug"/>
     
             </actions>
         </library>
@@ -2557,7 +2582,7 @@
 
                         <do_if value="typeof $refFleetTable != datatype.table">
         
-                            <set_value name="$RMCommanderName" exact="$PromotedCommander.name"/>
+                            <set_value name="$RMCommanderName" exact="if $PromotedCommander != null then $PromotedCommander.name else ''"/>
     
                             <!-- ADD RM_FLEETS -->
                             <set_value name="Main.$RM_Fleets.{$RFMKey}" exact="table[
@@ -2573,7 +2598,7 @@
                                 $id                 = $RFMKey,
                                 $isLockedFleet      = false,
                                 $isStation          = if $RMCommander.isclass.station then true else false,
-                                $name               = $PromotedCommander.name,
+                                $name               = if $PromotedCommander != null then $PromotedCommander.name else '',
                                 $object             = $PromotedCommander,
                                 $shipid             = 1,
                                 $order              = table[],
@@ -10463,21 +10488,24 @@
                 <create_group groupname="$Subordinates"/>
                 <!-- Set to Start Key -->
                 <set_value name="$tShipKey" exact="1" />
-                <!-- Prepare RFM Header Values -->
-                <add_to_group groupname="$Promoted" object="$Commander"/>
 
-                <set_value name="$fleetshipsByComp.{$Commander}" exact="$tShipKey" />
-                <set_value name="$fleetshipsByIdx.{$tShipKey}" exact="$Commander" />
-                <add_to_group groupname="$Subordinates" object="$Commander"/>
+                <do_if value="$Commander != null">
+                    <!-- Prepare RFM Header Values -->
+                    <add_to_group groupname="$Promoted" object="$Commander"/>
 
-                <do_for_each name="$tShip" in="$Commander.allsubordinates" >
-                    <do_if value="not $tShip.isunit and not $tShip.isclass.ship_xs">
-                        <set_value name="$tShipKey" operation="add" exact="1" />
-                        <set_value name="$fleetshipsByComp.{$tShip}" exact="$tShipKey" />
-                        <set_value name="$fleetshipsByIdx.{$tShipKey}" exact="$tShip" />
-                        <add_to_group groupname="$Subordinates" object="$tShip"/>
-                    </do_if>
-                </do_for_each>
+                    <set_value name="$fleetshipsByComp.{$Commander}" exact="$tShipKey" />
+                    <set_value name="$fleetshipsByIdx.{$tShipKey}" exact="$Commander" />
+                    <add_to_group groupname="$Subordinates" object="$Commander"/>
+
+                    <do_for_each name="$tShip" in="$Commander.allsubordinates" >
+                        <do_if value="not $tShip.isunit and not $tShip.isclass.ship_xs">
+                            <set_value name="$tShipKey" operation="add" exact="1" />
+                            <set_value name="$fleetshipsByComp.{$tShip}" exact="$tShipKey" />
+                            <set_value name="$fleetshipsByIdx.{$tShipKey}" exact="$tShip" />
+                            <add_to_group groupname="$Subordinates" object="$tShip"/>
+                        </do_if>
+                    </do_for_each>
+                </do_if>
 
                 <set_value name="$result" exact="[ $Promoted, $fleetshipsByComp, $fleetshipsByIdx, $Subordinates ]" />
                 <return value="$result"/>
@@ -10517,7 +10545,7 @@
                         FleetRec = Main.$FleetRecords.{$RFMKey} 
                         Loadout  = Main.$Loadout.{$RFMKey}      olarak belirlenir ve 
                     Verilmez ise bağımsız bir FleetRec kaydı açılır ve istenilen değerler return içinden okunur.
-                SendPlanData    : true ise lua yolu ile ShipPlan oluşturup ekleme istekleri gönderilir. (default true)
+                SendPlanData    : RFMKey verilmiş ise ve SendPlanData true ise lua yolu ile ShipPlan oluşturup ekleme istekleri gönderilir. (default true)
             OUT :
                 [$HeaderData, $FleetRec, $Loadouts, $PlanData]
          -->
@@ -10598,7 +10626,7 @@
 
                 <!-- ShipPlan ataması istenecek -->
                 <do_if value="$RFMKey != null">
-                    <do_if value="$SendPlanData">
+                    <do_if value="$SendPlanData and $PlanData? ">
                         <!--param  $PlanData  or  [ $PlanData , $isChangeCrewAmounts (default false), $debug (default true) ] -->
                         <signal_cue_instantly cue="Get_PlanData_FromLua" param="$PlanData" />
                     </do_if>
