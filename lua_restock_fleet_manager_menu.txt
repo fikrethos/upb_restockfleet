@@ -450,7 +450,8 @@ function menu.cleanup()
     menu.sorterTable = {}
     menu.fleetShipsTable = {}
     menu.rightTable = {}
-    menu.bottomTable = {}
+    menu.bottomLTable = {}
+    menu.bottomRTable = {}
 
     menu.queueupdate = nil
     menu.resetrow = nil
@@ -514,6 +515,7 @@ function menu.onShowMenu()
         menu.editedSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Editing"].ValidUpdates.NYards.equipments == 1) and true or false
         menu.editedSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Editing"].ValidUpdates.NYards.peoples == 1) and true or false
         menu.editedSettings.personnelcloning = (menu.param[5]["Editing"].personnelcloning == 1) and true or false
+        menu.editedSettings.autobuildafterclone = (menu.param[5]["Editing"].autobuildafterclone == 1) and true or false
         menu.editedSettings.DebugFileDetail_Fleets = (menu.param[5]["Editing"].DebugFileDetail_Fleets == 1) and true or false
         menu.editedSettings.DebugFileDetail_Records = (menu.param[5]["Editing"].DebugFileDetail_Records == 1) and true or false
         for key, value in pairs(menu.editedSettings.failcases) do
@@ -532,6 +534,7 @@ function menu.onShowMenu()
         menu.defaultSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Default"].ValidUpdates.NYards.equipments == 1) and true or false
         menu.defaultSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Default"].ValidUpdates.NYards.peoples == 1) and true or false
         menu.defaultSettings.personnelcloning = (menu.param[5]["Default"].personnelcloning == 1) and true or false
+        menu.defaultSettings.autobuildafterclone = (menu.param[5]["Default"].autobuildafterclone == 1) and true or false
         menu.defaultSettings.DebugFileDetail_Fleets = (menu.param[5]["Default"].DebugFileDetail_Fleets == 1) and true or false
         menu.defaultSettings.DebugFileDetail_Records = (menu.param[5]["Default"].DebugFileDetail_Records == 1) and true or false
         for key, value in pairs(menu.defaultSettings.failcases) do
@@ -553,7 +556,7 @@ function menu.onShowMenu()
 
     -- (conversation menusünün altında kalıyor)
     -- Pencereyi negatif daralt 
-    local nWidth, nHeight = 200, 130
+    local nWidth, nHeight = 0, 130
     -- Pencereyi negatif kaydır 
     local nPosX , nPosY = 0, 200
 
@@ -944,9 +947,10 @@ function menu.createInfoFrame()
             .sorterTable.id     : %s
             .fleetShipsTable.id : %s
             .rightTable.id      : %s
-            .bottomTable.id     : %s
+            .bottomLTable.id     : %s
+            .bottomRTable.id     : %s
             ]],
-            menu.infoFrame.id, menu.fleetTable.id, menu.sorterTable.id, menu.fleetShipsTable.id, menu.rightTable.id, menu.bottomTable.id
+            menu.infoFrame.id, menu.fleetTable.id, menu.sorterTable.id, menu.fleetShipsTable.id, menu.rightTable.id, menu.bottomLTable.id, menu.bottomRTable.id
         )
     if debugWProps then DebugError(strDebug) end
 
@@ -1370,27 +1374,45 @@ function menu.Settings_RowFormat(frame, offsetX, offsetY, width)
     row = ftable:addRow(false, { fixed = fixed, bgColor = config.sColor.transparent })
     row[2]:setColSpan(11):createText("Auto Rebuilds", subHeaderTextProperties)
     -- ----------------------------------
+    ftable:addEmptyRow(3)
     -- NextRetryTime
     row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent })
     row[2]:setColSpan(3):createText("Retry Time", { mouseOverText = "How long will it take for ships that failed to be produced to be attempted again automatically?", fontsize = map_fontsize })
     row[5]:setColSpan(8):createSliderCell({ min = 1, max = 30, step = 1, start = menu.editedSettings.NextRetryTime, suffix = ReadText(1001, 103), height = map_textheight })
     row[5].handlers.onSliderCellConfirm = menu.slidercell_NextRetryTime
 
+
+    -- RFM Cloning
+    row = ftable:addRow(false, { fixed = fixed, bgColor = config.sColor.transparent })
+    row[2]:setColSpan(11):createText("Fleet Cloning", subHeaderLeftTextProperties)
+
+    --autobuildafterclone
+    row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent } )
+    row[2]:setColSpan(3):createText("  Auto Rebuild After Cloning", { mouseOverText = "If approved, the production process of the new RFM will automatically start after the RFM cloning is done.", fontsize = map_fontsize })
+    row[5]:setColSpan(1):createCheckBox(menu.editedSettings.autobuildafterclone, { width = map_textheight, height = map_textheight })
+    row[5].handlers.onClick = menu.checkbox_autobuildafterclone
+
     --personnelcloning
     row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent } )
-    row[2]:setColSpan(3):createText("Personnel Cloning", { mouseOverText = "It creates the same personnel ranks as in the RFM record of the produced ship. If not selected, random low-level personnel will be created.", fontsize = map_fontsize })
+    row[2]:setColSpan(3):createText("  Personnel Cloning", { mouseOverText = "It creates the same personnel ranks as in the RFM record of the produced ship. If not selected, random low-level personnel will be created.", fontsize = map_fontsize })
     row[5]:setColSpan(1):createCheckBox(menu.editedSettings.personnelcloning, { width = map_textheight, height = map_textheight })
     row[5].handlers.onClick = menu.checkbox_personnelcloning
 
+    ftable:addEmptyRow(3)
+
+    --monetary restrictions
+    row = ftable:addRow(false, { fixed = fixed, bgColor = config.sColor.transparent })
+    row[2]:setColSpan(11):createText("Monetary Restrictions", subHeaderLeftTextProperties)
+
     -- MoneyThreshold
     row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent })
-    row[2]:setColSpan(3):createText("Player Money Threshold", { mouseOverText = "Never rebuild ships which reduces player money below this amount", fontsize = map_fontsize })
+    row[2]:setColSpan(3):createText("  Player Money Threshold", { mouseOverText = "Never rebuild ships which reduces player money below this amount", fontsize = map_fontsize })
     row[5]:setColSpan(8):createSliderCell({ min = 0, max = menu.editedSettings.maxmoney, step = menu.editedSettings.moneystep, start = menu.editedSettings.playermoneythreshold, suffix = ReadText(1001, 101), height = map_textheight })
     row[5].handlers.onSliderCellConfirm = menu.slidercell_playermoneythreshold
 
     -- MoneyThreshold
     row = ftable:addRow(true, { fixed = fixed, bgColor = config.sColor.transparent })
-    row[2]:setColSpan(3):createText("Max Allowed Ship Price", { mouseOverText = "Maximum price allowed for ship production. If the value requested for the ship's production fee at NPC stations exceeds this value, the ship will not be produced.", fontsize = map_fontsize })
+    row[2]:setColSpan(3):createText("  Max Allowed Ship Price", { mouseOverText = "Maximum price allowed for ship production. If the value requested for the ship's production fee at NPC stations exceeds this value, the ship will not be produced.", fontsize = map_fontsize })
     row[5]:setColSpan(8):createSliderCell({ min = 0, max = 9 * menu.editedSettings.maxmoney, step = menu.editedSettings.moneystep, start = menu.editedSettings.maxallowedpricepership, suffix = ReadText(1001, 101), height = map_textheight })
     row[5].handlers.onSliderCellConfirm = menu.slidercell_maxallowedpricepership
     
@@ -1521,7 +1543,7 @@ function menu.createManagerTables(frame)
     local borderSize = Helper.borderSize  
     local usablewidth = frame.properties.width 
     local FleetTableWidthRatio = 4.5 / 13
-    local ShipTableWidthRatio = 5 / 13
+    local ShipTableWidthRatio = 4.5 / 13
     local rightTableWidthScale = 1 - FleetTableWidthRatio - ShipTableWidthRatio
 
     local row
@@ -1562,28 +1584,29 @@ function menu.createManagerTables(frame)
     --
     -- bottomTable TABLE
     --
-    menu.bottomTable = menu.createRFMFBottomTable(frame, menu.rightTable.properties.x )
+    menu.bottomLTable, menu.bottomRTable = menu.createRFMFBottomTable(frame, menu.fleetTable.properties, menu.fleetShipsTable.properties )
     
     -- Table y konumlarını ayarla
-    offsety = menu.bottomTable:getVisibleHeight()
-    menu.bottomTable.properties.y = frame.properties.height - borderSize - offsety
-    menu.fleetTable.properties.maxVisibleHeight = menu.bottomTable.properties.y - menu.fleetTable.properties.y 
-    menu.fleetShipsTable.properties.maxVisibleHeight = menu.bottomTable.properties.y 
+    offsety = menu.bottomLTable:getVisibleHeight()
+    menu.bottomLTable.properties.y = frame.properties.height - borderSize - offsety
+    menu.bottomRTable.properties.y = menu.bottomLTable.properties.y
+    menu.fleetTable.properties.maxVisibleHeight = menu.bottomLTable.properties.y - menu.fleetTable.properties.y 
+    menu.fleetShipsTable.properties.maxVisibleHeight = menu.bottomLTable.properties.y 
 
     -- (table.index i atanacak)
     -- UP prevTable (ilk satırda basıldığında), DOWN nextTable (en son staırda basıldığında)
     -- LEFT prevHorizontalTable ,               RIGHT nextHorizontalTable (en son staırda basıldığında)
-    menu.sorterTable.properties.prevTable = menu.bottomTable.index
+    menu.sorterTable.properties.prevTable = menu.bottomLTable.index
     menu.sorterTable.properties.nextTable = menu.fleetTable.index
     menu.sorterTable.properties.nextHorizontalTable = menu.fleetShipsTable.index
     menu.fleetTable.properties.prevTable = menu.sorterTable.index
-    menu.fleetTable.properties.nextTable = menu.bottomTable.index
+    menu.fleetTable.properties.nextTable = menu.bottomLTable.index
     menu.fleetTable.properties.nextHorizontalTable = menu.fleetShipsTable.index
     menu.fleetShipsTable.properties.prevHorizontalTable = menu.fleetTable.index
     --menu.fleetShipsTable.properties.prevTable = menu.sorterTable.index
-    --menu.fleetShipsTable.properties.nextTable = menu.bottomTable.index
-    menu.bottomTable.properties.prevTable = menu.fleetTable.index
-    menu.bottomTable.properties.nextTable = menu.sorterTable.index
+    --menu.fleetShipsTable.properties.nextTable = menu.bottomLTable.index
+    menu.bottomLTable.properties.prevTable = menu.fleetTable.index
+    menu.bottomLTable.properties.nextTable = menu.sorterTable.index
 
 
     if debugWProps then
@@ -1610,7 +1633,8 @@ function menu.createManagerTables(frame)
             menu.sorterTable.properties.x, menu.sorterTable.properties.y, menu.sorterTable.properties.width, menu.sorterTable.properties.height,
             menu.fleetShipsTable.properties.x, menu.fleetShipsTable.properties.y, menu.fleetShipsTable.properties.width, menu.fleetShipsTable.properties.height,
             menu.rightTable.properties.x, menu.rightTable.properties.y, menu.rightTable.properties.width, menu.rightTable.properties.height,
-            menu.bottomTable.properties.x, menu.bottomTable.properties.y, menu.bottomTable.properties.width, menu.bottomTable.properties.height
+            menu.bottomLTable.properties.x, menu.bottomLTable.properties.y, menu.bottomLTable.properties.width, menu.bottomLTable.properties.height,
+            menu.bottomRTable.properties.x, menu.bottomRTable.properties.y, menu.bottomRTable.properties.width, menu.bottomRTable.properties.height
             )
             local xdebug = debugWProps and DebugError(strDebug)
     end
@@ -1841,17 +1865,19 @@ function menu.add_RFMFleetTable_FleetEntry(ftable, fleetEntry)
     
     local textheight = C.GetTextHeight(" \n ", font, Helper.scaleFont(font, fontsize), Helper.viewWidth)
     
+    row[1]:createText(fleet.id, { color = config.sColor.white, scaling = true, fontsize = Helper.titleFontSize, y = (textheight - Helper.titleHeight) / 2, halign = "right" } )
+
     local name = ((fleet.name == "") and fleet.commander.name or fleet.name)
     local idcode = ((fleet.idcode == "") and "   {   All Ships are DEAD   }" or fleet.idcode)
-    row[1]:createText(fleet.id, { color = config.sColor.white , halign = "right" } )
+    local mouseovertext = tonumber(fleet.alertstatus.level) > 1 and "Alert Status: \n" .. Helper.convertColorToText(color) .. fleet.alertstatus.text or ""
 
     if fleet.isStation then
-        row[2]:createIcon(icon, { scaling = true, width = textheight - 2 , height = textheight - 2  , color = color})
+        row[2]:createIcon(icon, { scaling = true, width = textheight - 2 , height = textheight - 2  , color = color, mouseOverText = mouseovertext})
     else
-        row[2]:createText(string.format("\027[%s]", icon), { color = color } )
+        row[2]:createText(string.format("\027[%s]", icon), { color = color, mouseOverText = mouseovertext } )
     end
     -- debugW
-    local mouseovertext = tonumber(fleet.alertstatus.level) > 1 and "Alert Status: \n" .. Helper.convertColorToText(color) .. fleet.alertstatus.text or ""
+    
     row[3]:createText((name .. " " .. idcode .. ((debugW) and "   { row ".. tostring(row.index) .. " }" or "" ) ), { color = normalrowcolor, mouseOverText = mouseovertext  } )
 
     local Icon_OrderIconsGrp = row[4]:setColSpan(3):createIcon("solid", { scaling = false, color = { r = 0, g = 0, b = 0, a = 1 }, height = textheight })
@@ -2313,92 +2339,178 @@ function menu.createSubordinateSection(ftable, component, iteration, location, s
         
 end
 
-function menu.createRFMFBottomTable(frame, width)
+function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
 
     local row, ftable
+    local iconW, iconH = 56, 36
+    local mouseOverText = ""
+
+    local fleetIndex = menu.findFleet(menu.selectedfleet)
+    local isSelectedFleet = (fleetIndex) and true or false
+    local SelectedShip = menu.isSelectedShipLine(menu.shipsTableData.selected)
+
+    local record = menu.GetRecord(menu.selectedfleet, SelectedShip)
+
     --
     -- button TABLE
     --
     ftable = frame:addTable(13, {
         tabOrder = 4,
-        width = width,
+        width = ltproperties.width,
         backgroundID = "solid",
         backgroundColor = config.sColor.transparent,
     })
 
     ftable:setColWidth(1, Helper.standardTextHeight)
-    ftable:setColWidthPercent(2, 13)
-    ftable:setColWidth(3, Helper.standardTextHeight)
-    ftable:setColWidthPercent(4, 13)
-    ftable:setColWidth(5, Helper.standardTextHeight)
-    ftable:setColWidthPercent(6, 13)
-    ftable:setColWidth(7, 2 * Helper.standardTextHeight)
-    ftable:setColWidthPercent(8, 13)
-    ftable:setColWidth(9, Helper.standardTextHeight)
-    ftable:setColWidthPercent(10, 13)
-    ftable:setColWidth(11, Helper.standardTextHeight)
-    ftable:setColWidthPercent(12, 13)
-    -- 13.colon boşta kalan boşluğu alacak
+    ftable:setColWidth(2, iconH)
+    ftable:setColWidth(3, iconH)
+    ftable:setColWidth(4, iconH)
+    ftable:setColWidth(5, iconH)
+    ftable:setColWidth(6, iconH)
+    ftable:setColWidth(7, iconH)
+    ftable:setColWidth(8, iconH)
+    ftable:setColWidth(9, iconH)
+    ftable:setColWidth(10, iconH)
+    ftable:setColWidth(11, iconH)
+    ftable:setColWidth(13, iconH)
 
-    -- Kılavuz 
-    --row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.orange } )
-    --row[1]:setColSpan(1):createText("", {})
+    -- Kılavuz - Kontrol bars
+    --row = ftable:addRow(nil, { bgColor = config.sColor.orange })
+    --row[1]:setColSpan(1):createText("", { fontsize = 1, minRowHeight = 2 } )
     
-    row = ftable:addRow(false, { fixed = true, } )
-    row[1]:setColSpan(13):createText((""), {height = 3} )
-    row[1].properties.halign = "center"
-    
-    local fleetIndex = menu.findFleet(menu.selectedfleet)
-    local isSelectedFleet = (fleetIndex) and true or false
-    local SelectedShip = menu.isSelectedShipLine(menu.shipsTableData.selected)
+    -- Satır Ekle - Gri ince
+    row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
+    row[1]:setColSpan(13):createText("", { height = 3 } )
 
-    row = ftable:addRow("buttonrow", { fixed = true, bgColor = config.sColor.transparent, } )
-    
-    local color = isSelectedFleet and Helper.convertColorToText(menu.fleets[fleetIndex].color) or config.sColor.white
-    local reenablebuttonText = isSelectedFleet and string.format("Restart [ %sRFM %s \027X]", color, tostring(menu.selectedfleet)) or "Restart"
-    local disablebuttonText = isSelectedFleet and string.format("Disable [ %sRFM %s \027X]", color, tostring(menu.selectedfleet)) or "Disable"
-    row[2]:createButton({ active = isSelectedFleet } )
-    row[2]:setText( reenablebuttonText, { halign = "center" } ) -- ReEnable Selected Fleet
-    row[2].handlers.onClick = function() return menu.buttonReEnable() end
+    -- Boş Satır
+    row = ftable:addRow(false, { bgColor = config.sColor.transparent })
+    row[1]:setColSpan(Helper.borderSize)
 
-    row[4]:createButton({ active = isSelectedFleet } )
-    row[4]:setText( disablebuttonText, { halign = "center" } ) -- Disable Selected Fleet
-    row[4].handlers.onClick = function() return menu.buttonDisable() end
+    row = ftable:addRow("buttonrow1", { fixed = true, bgColor = config.sColor.transparent, } )
+    
+    local color = config.sColor.white
+    if fleetIndex then
+        color = menu.fleets[fleetIndex].color
+    end
+
+    local reenablebuttonText = isSelectedFleet and string.format("[ %sRFM %s \027X]", Helper.convertColorToText(color), tostring(menu.selectedfleet)) or ""
+    local disablebuttonText = isSelectedFleet and string.format("[ %sRFM %s \027X]", Helper.convertColorToText(color), tostring(menu.selectedfleet)) or ""
+
+    -- Close RFM
+    mouseOverText = "Close " .. disablebuttonText
+    row[13]:createButton({ active = isSelectedFleet, width = iconH , height = iconH, x = row[13].properties.width /2  , mouseOverText = mouseOverText } )
+    :setIcon("rfm_disable", { color = config.Color.text_enemy, width = iconH , height = iconH })
+    row[13].handlers.onClick = function() return menu.buttonDisable() end
+
+    -- Restart RFM
+    mouseOverText = "Restart " .. reenablebuttonText
+    row[4]:createButton({ active = isSelectedFleet,  width = iconH , height = iconH, mouseOverText = mouseOverText } )
+    :setIcon("rfm_restart", {  color = menu.colorNormal, width = iconH , height = iconH })
+    row[4].handlers.onClick = function() return menu.buttonReEnable() end
 
     if isSelectedFleet then
+        -- Autobuild
         local autobuildvalue = menu.fleets[fleetIndex].autobuild
-        local autoBuildText = " ON "
-        local autobuildcolor = config.sColor.statusGreen
-        local mouseOverText = "When the ship belonging to this RFM destroyed, the rebuild process will be started automatically."
+        local autobuildcolor = config.Color.text_success
+        mouseOverText = "[Autobuild Status is ON] When the ship belonging to this RFM destroyed, the rebuild process will be started automatically."
         if not autobuildvalue then
-            autoBuildText = "OFF"
-            autobuildcolor = config.sColor.statusRed
-            mouseOverText = "When the ship belonging to this RFM destroyed, the rebuild process will NOT be started automatically."
+            autobuildcolor = config.Color.text_hostile
+            mouseOverText = "[Autobuild Status is OFF] When the ship belonging to this RFM destroyed, the rebuild process will NOT be started automatically."
         end
-        local autoBuildText = string.format("Auto Build [ %s%s \027X]", Helper.convertColorToText( autobuildcolor ), autoBuildText) 
-        row[6]:createButton({ active = isSelectedFleet, mouseOverText = mouseOverText } )
-        row[6]:setText( autoBuildText, { halign = "center" } ) -- Toggle auto build for Selected Fleet
-        row[6].handlers.onClick = function() 
+        row[2]:createButton({ active = isSelectedFleet, mouseOverText = mouseOverText, width = iconH , height = iconH } )
+        :setIcon("rfm_autobuild", { color = autobuildcolor, width = iconH, height = iconH })
+        row[2].handlers.onClick = function() 
                 menu.RM_Fleets[menu.selectedfleet].autobuild = autobuildvalue and 0 or 1    -- md datasında true false değerleri 1 0 olarak geliyor
                 menu.buttonAutoBuildChanged() 
                 menu.refreshInfoFrame()
             end
+
+        -- Clone RFM
+        mouseOverText = not menu.fleets[fleetIndex].isStation and "Create a new clone of " .. "RFM " .. tostring(menu.selectedfleet) or ""
+        row[11]:createButton({ active = (isSelectedFleet and not menu.fleets[fleetIndex].isStation) , scaling = true, mouseOverText = mouseOverText, width= iconH , height=iconH } )
+        :setIcon("rfm_clonerfm", { color = config.Color.text_inprogress })
+        row[11].handlers.onClick = function() 
+            menu.buttonRFMClone() 
+        end
+
     end
 
-    local record = menu.GetRecord(menu.selectedfleet, SelectedShip) 
+    -- Boş Satır
+    row = ftable:addRow(false, { bgColor = config.sColor.transparent })
+    row[1]:setColSpan(Helper.borderSize)
 
-    row[8]:createButton({ active = function() return (record.object or record.build) and true or false end  } )
-    row[8]:setText("Show on Map", { halign = "center" }) 
-    row[8].handlers.onClick = menu.buttonOnShowMap
 
+    -- Satır Ekle - Gri ince
+    --row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
+    --row[1]:setColSpan(13):createText("", { height = 3 } )
+
+    local bottomLTable = ftable
+
+
+
+
+
+    ftable = frame:addTable(13, {
+        tabOrder = 4,
+        x = rtproperties.x,
+        width = rtproperties.width,
+        backgroundID = "solid",
+        backgroundColor = config.sColor.transparent,
+    })
+    local bottomRTable = ftable
+    
+    ftable:setColWidth(1, iconH)
+    ftable:setColWidth(2, iconH)
+    ftable:setColWidth(3, iconH)
+    ftable:setColWidth(4, iconH)
+    ftable:setColWidth(5, iconH)
+    ftable:setColWidth(6, iconH)
+    ftable:setColWidth(7, iconH)
+    ftable:setColWidth(8, iconH)
+    ftable:setColWidth(9, iconH)
+    ftable:setColWidth(10, iconH)
+    ftable:setColWidth(11, iconH)
+    ftable:setColWidth(12, iconH)
+
+    -- Satır Ekle - Gri ince
+    row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
+    row[1]:setColSpan(13):createText("", { height = 3 } )
+
+    -- Boş Satır
+    row = ftable:addRow(false, { bgColor = config.sColor.transparent })
+    row[1]:setColSpan(Helper.borderSize)
+
+    row = ftable:addRow("buttonrow2", { fixed = true, bgColor = config.sColor.transparent, } )
+
+    -- Show On Map
+    if record.id then
+        local name = record.name or ""
+        local nameid = (record.idcode and record.idcode ~= "") and " ( " .. record.idcode .. " ) " or record.idcode
+
+        mouseOverText = "Show " .. name .. nameid .. " on map."
+        row[2]:createButton({ active = function() return (record.object or record.build) and true or false end, mouseOverText = mouseOverText, width = iconH, height = iconH, cellBGColor = config.Color["row_background"] })
+        :setIcon("menu_center_selection", { width = iconH, height = iconH  })
+        row[2].handlers.onClick = menu.buttonOnShowMap
+    end
+
+    -- Remove Ship
     if record.destroyed and not record.construction.buildingcontainer then
         local mouseOverText = "Removes the selected ship from the Restock Fleet records.\nOnly valid for exploded ships that cannot be produced."
-        row[10]:createButton({ active = true, mouseOverText = mouseOverText  } )
-        row[10]:setText("Remove Ship", { halign = "center" }) -- Rebuild 
-        row[10].handlers.onClick = function() return menu.buttonRemoveShip() end
+        row[8]:createButton({ active = record.destroyed and not record.construction.buildingcontainer, width = iconH, height = iconH, mouseOverText = mouseOverText  } )
+        :setIcon("rfm_removeship", { color = config.Color.text_hostile, width = iconH, height = iconH  })
+        row[8].handlers.onClick = function() return menu.buttonRemoveShip() end
     end
 
-    return ftable
+    -- Boş Satır
+    row = ftable:addRow(false, { bgColor = config.sColor.transparent })
+    row[1]:setColSpan(Helper.borderSize)
+
+    -- Satır Ekle - Gri ince
+    --row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
+    --row[1]:setColSpan(13):createText("", { height = 3 } )
+
+
+    return bottomLTable, bottomRTable
 end
 
 function menu.createRFMRightTable(frame, offsetx, offsety, width)
@@ -3328,6 +3440,16 @@ function menu.buttonAutoBuildChanged()
    
 end
 
+function menu.buttonRFMClone()
+    local xdebug = debug0 and DebugError("menu.buttonRFMClone")
+
+    local rfmKey = menu.selectedfleet
+    
+    local controlID = "RFMClone"
+    local screenParam = {rfmKey}
+
+    AddUITriggeredEvent(menu.name, controlID, screenParam)
+end
 
 function menu.buttonCancelConstruction(container, buildtaskid)
 	--bool CancelConstruction(UniverseID containerid, BuildTaskID id);
@@ -3637,6 +3759,11 @@ function menu.checkbox_personnelcloning(_, checked)
 	menu.editedSettings.personnelcloning = checked
     menu.Set_Md_Settings("personnelcloning " .. tostring(menu.editedSettings.personnelcloning))
 end
+function menu.checkbox_autobuildafterclone(_, checked)
+	menu.editedSettings.autobuildafterclone = checked
+    menu.Set_Md_Settings("autobuildafterclone " .. tostring(menu.editedSettings.autobuildafterclone))
+end
+
 function menu.slidercell_playermoneythreshold(_, value)
 	menu.editedSettings.playermoneythreshold = value
     menu.Set_Md_Settings("playermoneythreshold " .. tostring(value))
