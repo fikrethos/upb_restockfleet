@@ -3,10 +3,15 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 <!-- Yapılanlar ve düzeltilenler :
         * 
-        1- Üretilen gemi mürettebatının record zamanı rütbeler ile klonlanıp klonlanmayacağı ayarlarla belirlendi.
-        2- Faction relation change kodundaki hata giderildi.
-        3- Yeni açılacak RFM için Mevcut RFM'lerden kayıt devralma özelliği eklendi.
-        4- Manager ekranına rfm klonlama butonu kondu.
+        1- Conversation menusündeki textler dil dosyasına bağlandı.
+        2- Üretilen gemi mürettebatının Ship Record üzerindeki kayıtlı rütbeleri ile klonlanıp klonlanmayacağı ayarlarlanabiliyor.
+        3- Faction relation change kodundaki hata giderildi.
+        4- RemoveShip kodundaki bir hata düzeltildi.
+        5- Ayarlar ekranındaki Max Allowed Ship Price ve Player Money Threshold kaydırma çubuğunun artış değeri 100,000Cr den 500Cr ye düşürüldü. K kısaltma formatı kaldırıldı.
+        6- Manager ekranındaki text butonlar ikon butonu haline çevrildi.
+        7- Yeni açılacak RFM için Mevcut RFM'lerden kayıt devralma (Clone RFM) özelliği konuşma menüsüne eklendi.
+        8- Manager ekranında RFM'nin tam kolonu için buton kondu.
+        9- RemoveShip ve RemoveRFM olayları için oyuncudan onay isteği almak için onay penceresi özelliği eklendi.
         
         
     -->
@@ -538,6 +543,15 @@
                     <set_value name="Main.$RM_Fleets.{$RFMKey}.$autobuild" exact="not Main.$RM_Fleets.{$RFMKey}.$autobuild" />
                     <debug_text text="'RFM_%s.autobuild changed to %s'.[$RFMKey, Main.$RM_Fleets.{$RFMKey}.$autobuild]" chance="Main.$DeepDebug"/>
                     
+                </do_elseif>
+
+                <do_elseif value="event.param2 == 'changed.UserQuestions.RemoveRFM'">
+                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM" exact="not global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM" />
+                    <debug_text text="'UserQuestions.RemoveRFM changed to %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM]" chance="Main.$DeepDebug"/>
+                </do_elseif>
+                <do_elseif value="event.param2 == 'changed.UserQuestions.RemoveShip'">
+                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip" exact="not global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip" />
+                    <debug_text text="'UserQuestions.RemoveShip changed to %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip]" chance="Main.$DeepDebug"/>
                 </do_elseif>
 
                 <do_elseif value="event.param2 == ''">
@@ -1261,8 +1275,8 @@
                     2- destroyed olacak
                     3- build verisi olmayacak
                 -->
-                <set_value name="$debugchance" exact="100"/>
-                <do_if value="$ShipKey == 1 and $FleetRecords.{$RFMKey}.keys.list.count == 1">
+                
+                <do_if value="$ShipKey == 1 and Main.$FleetRecords.{$RFMKey}.keys.count == 1">
                     <set_value name="$delete" />
                 </do_if>
                 <do_if value="$ShipKey != 1 and Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$destroyed">
@@ -1334,7 +1348,7 @@
             </params>
             <actions>
                 <!-- Update Defaults, Sonradan eklenecek değişkenler için resetleme kontrolü -->
-                <do_if value="not global.$upbRF_DATA.$Default.$v232?">
+                <do_if value="not global.$upbRF_DATA.$Default.$v233?">
                     <set_value name="$changedGlobalDefaults" />
                 </do_if>
 
@@ -1342,12 +1356,11 @@
                     <set_value name="global.$upbRF_DATA" exact="table[]"/>
                     <debug_text text="'RFM Globals Is Set to Defaults'.[]" />
                     <do_if value="$reset" exact="true">
-                        <show_help duration="7s" custom="'%s %s. %s'.[readtext.{Main.$tPage}.{1320}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Reset Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
+                        <show_help duration="7s" custom="'%s %s.\n %s'.[readtext.{Main.$tPage}.{1320}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Reset Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
                     </do_if>
                     <do_else>
-                        <show_help duration="7s" custom="'%s %s. %s'.[readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Updated Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
+                        <show_help duration="7s" custom="'%s %s.\n %s'.[readtext.{Main.$tPage}.{1310}, readtext.{Main.$tPage}.{1}, readtext.{Main.$tPage}.{1400}]" comment="Updated Upb Restock Fleet Manager, Globals Is Setting to Defaults"/>
                     </do_else>
-                    <remove_value name="$changedGlobalDefaults" />
                 </do_if>
                 <set_value name="$alertlevels" exact="table[
                     $normal = 1,
@@ -1362,6 +1375,35 @@
                     {$alertlevels.$medium}  = '#FF'+ 'dc8200' + '#' , 
                     {$alertlevels.$high}    = '#FF'+ 'e62d5f' + '#' 
                                             ]"/>
+
+                <set_value name="$alertstatues" exact="table[
+                    $normal = table[                    
+                                $level = Main.$alertlevels.$normal, 
+                                $text  = readtext.{Main.$tPage}.{9050}, 
+                                $color = $alertcolors.{$alertlevels.$normal}
+                            ],
+                    $nopilot = table[                    
+                                $level = Main.$alertlevels.$low, 
+                                $text  = readtext.{Main.$tPage}.{9051}, 
+                                $color = $alertcolors.{$alertlevels.$low}
+                            ],
+                    $queuedship = table[                    
+                                $level = Main.$alertlevels.$low, 
+                                $text  = readtext.{Main.$tPage}.{9052}, 
+                                $color = $alertcolors.{$alertlevels.$low}
+                            ],
+                    $noshipyard = table[                    
+                                $level = Main.$alertlevels.$medium, 
+                                $text  = readtext.{Main.$tPage}.{9053}, 
+                                $color = $alertcolors.{$alertlevels.$medium}
+                            ],
+                    $rebuild    = table[                    
+                                $level = Main.$alertlevels.$high, 
+                                $text  = readtext.{Main.$tPage}.{9054}, 
+                                $color = $alertcolors.{$alertlevels.$high}
+                            ]
+                ]" />
+                        
                 <!-- $NextRetryTime değeri min cinsinden vereceğiz, saniyeye çevirme işlerini kodlar içinde yapacağız 
                     $maxallowedpricepership, playermoneythreshold ve $maxmoney değerlerini 
                         başlangıç olarak 2 milyon, 30 milyon ve max 100 milyon ayarlıyoruz
@@ -1383,28 +1425,29 @@
                     $price                  = 13
                 ]" />
                 <set_value name="$failcases" exact="table[ 
-                    $shipyard               = table[ $id = $failcaseOrders.$shipyard,           $check = true,  $name = 'shipyard',             $text = 'There is no compatible shipyard for construction.'   ]   ,
-                    $buildclass             = table[ $id = $failcaseOrders.$buildclass,         $check = true,  $name = 'buildclass',           $text = 'No shipyard could be found that could produce this class.'   ]   ,
-                    $buildmacro             = table[ $id = $failcaseOrders.$buildmacro,         $check = true,  $name = 'buildmacro',           $text = 'No shipyard could be found that could produce this chassis.'   ]   ,
-                    $sectorisknown          = table[ $id = $failcaseOrders.$sectorisknown,      $check = true,  $name = 'sectorisknown',        $text = 'The station located is in an unknown sector.'   ]   ,
-                    $relationdockge         = table[ $id = $failcaseOrders.$relationdockge,     $check = true,  $name = 'relationdockge',       $text = 'Relationship level is low.'   ]   ,
-                    $shiptrader             = table[ $id = $failcaseOrders.$shiptrader,         $check = true,  $name = 'shiptrader',           $text = 'Couldnt find any station with shiptrader.'   ]   ,
+                    $shipyard               = table[ $id = $failcaseOrders.$shipyard,           $check = true,  $name = 'shipyard',             $text = readtext.{Main.$tPage}.{9000}   ]   ,
+                    $buildclass             = table[ $id = $failcaseOrders.$buildclass,         $check = true,  $name = 'buildclass',           $text = readtext.{Main.$tPage}.{9001}   ]   ,
+                    $buildmacro             = table[ $id = $failcaseOrders.$buildmacro,         $check = true,  $name = 'buildmacro',           $text = readtext.{Main.$tPage}.{9002}   ]   ,
+                    $sectorisknown          = table[ $id = $failcaseOrders.$sectorisknown,      $check = true,  $name = 'sectorisknown',        $text = readtext.{Main.$tPage}.{9003}   ]   ,
+                    $relationdockge         = table[ $id = $failcaseOrders.$relationdockge,     $check = true,  $name = 'relationdockge',       $text = readtext.{Main.$tPage}.{9004}   ]   ,
+                    $shiptrader             = table[ $id = $failcaseOrders.$shiptrader,         $check = true,  $name = 'shiptrader',           $text = readtext.{Main.$tPage}.{9005}   ]   ,
 
-                    $m_ship_licence         = table[ $id = $failcaseOrders.$m_ship_licence,     $check = true,  $name = 'militaryship',         $text = 'No have [ %s ] %s for this faction.'   ]   ,
-                    $c_ship_licence         = table[ $id = $failcaseOrders.$c_ship_licence,     $check = true,  $name = 'capitalship',          $text = 'No have [ %s ] %s for this faction.'   ]   ,
+                    $m_ship_licence         = table[ $id = $failcaseOrders.$m_ship_licence,     $check = true,  $name = 'militaryship',         $text = readtext.{Main.$tPage}.{9006}   ]   ,
+                    $c_ship_licence         = table[ $id = $failcaseOrders.$c_ship_licence,     $check = true,  $name = 'capitalship',          $text = readtext.{Main.$tPage}.{9007}   ]   ,
 
-                    $equipment              = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'equipment',            $text = 'Wrong installed ware(s) for this station.'   ]   ,
-                    $m_equipment_licence    = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'militaryequipment',    $text = 'No have %s for this faction.'   ]   ,
-                    $c_equipment_licence    = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'capitalequipment',     $text = 'No have %s for this faction.'   ]   ,
+                    $equipment              = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'equipment',            $text = readtext.{Main.$tPage}.{9008}   ]   ,
+                    $m_equipment_licence    = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'militaryequipment',    $text = readtext.{Main.$tPage}.{9009}   ]   ,
+                    $c_equipment_licence    = table[ $id = $failcaseOrders.$equipment,          $check = true,  $name = 'capitalequipment',     $text = readtext.{Main.$tPage}.{9009}   ]   ,
 
-                    $selectbest             = table[ $id = $failcaseOrders.$selectbest,         $check = true,  $name = 'selectbest',           $text = 'Can not select any possible Best Station in compability yards.'   ]   ,
-                    $price                  = table[ $id = $failcaseOrders.$price,              $check = true,  $name = 'price',                $text = 'Insufficient funds.'   ]   
+                    $selectbest             = table[ $id = $failcaseOrders.$selectbest,         $check = true,  $name = 'selectbest',           $text = readtext.{Main.$tPage}.{9010}   ]   ,
+                    $price                  = table[ $id = $failcaseOrders.$price,              $check = true,  $name = 'price',                $text = readtext.{Main.$tPage}.{9011}   ]   
                 ]" />
 
 
                 <set_value name="global.$upbRF_DATA.$Default" exact="table
                 [
-                    $v232 = null ,
+                    $v233 = null ,
+                    $tPage                  = Main.$tPage,
                     $shownotification       = false  ,
                     $showhelp               = true   ,
                     $write_to_logbook       = true   ,
@@ -1419,10 +1462,11 @@
                     $NextRetryTime              = 5         ,
                     $maxallowedpricepership     = 2000000       ,
                     $playermoneythreshold       = 30000000      ,
-                    $moneystep                  = 100000        ,
+                    $moneystep                  = 500        ,
                     $maxmoney                   = 100000000     ,
                     $personnelcloning           = false     ,
                     $autobuildafterclone        = false     ,
+                    $UserQuestions              = table[ $RemoveRFM = false, $RemoveShip = false ],
                     $DebugChance                = 0         ,
                     $DeepDebug                  = 0         ,
                     $ChangesOnFleetDebug        = 0         ,
@@ -1445,7 +1489,8 @@
                             $TAG_reAssignment   = '_reAssignment'
                         ]                                            ,
                     $alertlevels            = $alertlevels              ,
-                    $alertcolors            = $alertcolors               ,
+                    $alertcolors            = $alertcolors              ,
+                    $alertstatues           = $alertstatues             ,
                     $normalColor            = $alertcolors.{$alertlevels.$normal}    ,
                     $alertColor             = $alertcolors.{$alertlevels.$medium}    ,
                     $oldN                   = '#FF'+ 'c4ff0e' + '#'     , 
@@ -1458,6 +1503,7 @@
                     <set_value name="global.$upbRF_DATA.$Editing" exact="global.$upbRF_DATA.$Default"/>
                 </do_if>
 
+                <remove_value name="$changedGlobalDefaults" />
             </actions>
         </library>
 
@@ -1524,12 +1570,12 @@
                                 
                 <set_value name="Main.$alertlevels" exact="global.$upbRF_DATA.$Editing.$alertlevels"/>
                 <set_value name="Main.$alertcolors" exact="global.$upbRF_DATA.$Editing.$alertcolors"/>
+                <set_value name="Main.$alertstatues" exact="global.$upbRF_DATA.$Editing.$alertstatues"/>
+                
 
                 <set_value name="Main.$normalColor" exact="global.$upbRF_DATA.$Editing.$normalColor"/>
                 <set_value name="Main.$alertColor" exact="global.$upbRF_DATA.$Editing.$alertColor"/>
                 <set_value name="Main.$RMShipCaptionTag" exact="global.$upbRF_DATA.$Editing.$RMShipCaptionTag"/>
-
-                <set_value name="Main.$page" exact="1134010" />
 
                 <set_value name="Main.$isDebugMod_Dump" exact="false" comment="Scan activity yapıldığında devreye sokmak için"/>
 
@@ -1842,7 +1888,7 @@
 
                 <debug_text text="$tStr + '=== CLONNING RFM_%s ========= New RFM_%s ========= [ START ] ==='.[$CloneRFMKey, $RFMKey]" chance="$deepdebug"/>
 
-                <debug_text text="$tStr + '  Entity &lt;%s&gt;%s , Entity.RFM FLAG %s'.[if $entity != null then $entity else 'YOK', $entity != null then $entity.name else '', if $entity.$RFM? then 'AKTİF' else 'YOK' ]" chance="$deepdebug"/>
+                <debug_text text="$tStr + '  Entity &lt;%s&gt;%s , Entity.RFM FLAG %s'.[if $entity != null then $entity else 'YOK', if $entity != null then $entity.name else '', if $entity.$RFM? then 'AKTİF' else 'YOK' ]" chance="$deepdebug"/>
 
                 <debug_text text="$tStr + '  Yeni Manager Başlatılıyor...'.[]" chance="$deepdebug" />
                 <!-- $entity yoksa tam bir klonlama olacak -->
@@ -2280,10 +2326,10 @@
                     <actions>
                         <set_value name="$object" exact="if event.param? and typeof event.param == datatype.list then event.param.{1} else event.param" />
                         <do_if value="@md.ExtendedConversationMenu.Main.exists">
-                            <add_player_choice_sub text="'\33' + $normalColor + {1134010, 1000} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" section="RestockManager"  comment="Upb Restock Fleet"/>
+                            <add_player_choice_sub text="'\33' + $normalColor + readtext.{Main.$tPage}.{1500} + '\33X'" section="RestockManager"  comment="Upb Restock Fleet"/>
                         </do_if>
                         <do_else>
-                            <add_player_choice_sub text="'\33' + $normalColor + {1134010, 1000} + ' ' + {1004, 28} + ' ' + {1001, 9919} + '\33X'" position="bottom_left" section="RestockManager"  comment="Upb Restock Fleet"/>
+                            <add_player_choice_sub text="'\33' + $normalColor + readtext.{Main.$tPage}.{1500} + '\33X'" position="bottom_left" section="RestockManager"  comment="Upb Restock Fleet"/>
                         </do_else>
                         
                     </actions>
@@ -2305,12 +2351,12 @@
                         <debug_text text="'1 %s %s : entity = %s, %s , RFM? %s, @RFM %s'.[event.name, event.param, event.object, event.object.name, event.object.$RFM?, @event.object.$RFM]" />
                         -->
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
-                            <add_player_choice_sub text="'\33' + $normalColor + readtext.{Main.$tPage}.{1020} + ' ' + readtext.{Main.$tPage}.{1030} + ' ' + readtext.{Main.$tPage}.{1040} + '\33X'" section="csRFM_Enable" position="left" comment="Enable Restock Fleet"/>
+                            <add_player_choice_sub text="'\33' + $normalColor + readtext.{Main.$tPage}.{1510} + '\33X'" section="csRFM_Enable" position="left" comment="Enable Restock Fleet"/>
                             <set_value name="$selectable" exact="true"/>
                             <do_if value="event.object.assignedcontrolled.subordinates.count">
                                 <set_value name="$selectable" exact="false"/>
                             </do_if>
-                            <add_player_choice_sub text="readtext.{Main.$tPage}.{1020} + ' ' + readtext.{Main.$tPage}.{1080} + ' ' + readtext.{Main.$tPage}.{1010} " selectable="$selectable" section="csRFM_fleets" position="right" comment="Enable From RFM"/>
+                            <add_player_choice_sub text="readtext.{Main.$tPage}.{1520} " selectable="$selectable" section="csRFM_fleets" position="right" comment="Enable From RFM"/>
                         </do_if>
                         
                         <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}" section="csRFM_OpenLua" choiceparam="'manager'" position="top_left" comment="Management" />
@@ -2393,7 +2439,7 @@
                         </do_elseif>
 
                         <do_elseif value="event.param == 'csRFM_fleetselected'">
-                            <add_player_choice text="{1001,2821}" section="csRFM_RFMConfirmed" position="top_left" choiceparam="event.param2" comment="Confirm"/>
+                            <add_player_choice text="readtext.{Main.$tPage}.{1073}" section="csRFM_RFMConfirmed" position="top_left" choiceparam="event.param2" comment="Confirm"/>
                             <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                         </do_elseif>
 
@@ -2826,7 +2872,7 @@
                                 -->
                                 <do_if value="event.param == 'cSO_RFM_More_1'">
 
-                                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1200}" position="top_left" section="cSO_RFM_LostShips" comment="Produce for Lost Ships"/>
+                                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1530}" position="top_left" section="cSO_RFM_LostShips" comment="Produce for Lost Ships"/>
                                     
                                     <add_player_choice_sub text="readtext.{Main.$tPage}.{1090} + ' ' + readtext.{Main.$tPage}.{1102}" position="bottom_left" section="cSO_RFM_More_2"  comment="More 2"/>
                                     
@@ -2850,8 +2896,8 @@
                                     <add_player_choice text="'%s %s_%s - [ # %s%s%s ]'.[readtext.{Main.$tPage}.{1021}, Main.$RFMTag, $RFMKey, $CS, md.Upb_Restock_Fleet.Main.$RebuildCues.{$RFMKey}.keys.count, $CE]"  position="top_right" section="cSO_RFM_Disable" comment="Disable RFM_xx"/>
 
                                     <set_value name="$CS" exact="'\33' + $color" />
-                                    <add_player_choice_sub text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1110}, $CE ]"  position="left" section="cSO_RFM_AllReEnable" comment="Restart All Fleets"/>
-                                    <add_player_choice text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1120}, $CE ]"  position="bottom_left" section="cSO_RFM_AllDisable" comment="Disable All Fleets"/>
+                                    <add_player_choice_sub text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1550}, $CE ]"  position="left" section="cSO_RFM_AllReEnable" comment="Restart All Fleets"/>
+                                    <add_player_choice text="'%s%s%s'.[$CS, readtext.{Main.$tPage}.{1560}, $CE ]"  position="bottom_left" section="cSO_RFM_AllDisable" comment="Disable All Fleets"/>
 
                                     <remove_value name="$CS" />
                                     <remove_value name="$CE" />
@@ -2975,7 +3021,7 @@
                                         <param name="debugchance" value="Main.$DeepDebug" />
                                     </run_actions>
 
-                                    <add_player_choice text="readtext.{Main.$tPage}.{1210}" selectable="false" section="" position="top_left"/>
+                                    <add_player_choice text="readtext.{Main.$tPage}.{1540}" selectable="false" section="" position="top_left"/>
                                     <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
 
                                 </do_elseif>
@@ -3503,27 +3549,27 @@
                                     <do_if value="$TopLevelCommanderDie">
                                         <do_if value="$Ship_IDX == 1" comment="Gerçek fleet commander öldü">
                                             <set_value name="Main.$RM_Fleets.{$RFMKey}.$commander.$object" exact="null"/>
-                                            <set_value name="$capText" exact="'\033' + 'R' + 'Destroyed '+ Main.$RFMTag + '_' + $RFMKey + '_ Commander' + '\033X'" />
+                                            <set_value name="$capText" exact="'\033' + 'R' + readtext.{Main.$tPage}.{6620} + ' ' + Main.$RFMTag + '_' + $RFMKey + '_ ' + readtext.{Main.$tPage}.{6570} + '\033X'" />
                                         </do_if>
                                         <do_else>
-                                            <set_value name="$capText" exact="'\033' + 'O' + 'Destroyed '+ Main.$RFMTag + '_' + $RFMKey + '_  Commander' + '\033X'" />
+                                            <set_value name="$capText" exact="'\033' + 'O' + readtext.{Main.$tPage}.{6620} + ' ' + Main.$RFMTag + '_' + $RFMKey + '_ '+  readtext.{Main.$tPage}.{6570} + '\033X'" />
                                         </do_else>
                                     </do_if>
                                     <do_else>
-                                        <set_value name="$capText" exact="'\033' + 'Y' + 'Destroyed RFM_' + $RFMKey + '_  Ship' + '\033X'" />
+                                        <set_value name="$capText" exact="'\033' + 'Y' + readtext.{Main.$tPage}.{6620} + ' ' + 'RFM' + '_' + $RFMKey + '_ ' + readtext.{Main.$tPage}.{6571} + '\033X'" />
                                     </do_else>
                                     
 
                                     <show_help custom="'
                 %s\n\n
-    Ship : (%s) %s %s\n\n
-    Fleet Commander : %s %s\n
-    Sector          : %s\n
+    %s : (%s) %s %s\n\n
+    %s : %s %s\n
+    %s          : %s\n
                                     '.[
                                     $capText,
-                                    $Ship_IDX, $Ship_Name, event.object.idcode,
-                                    $RMCommanderName, $RMCommanderIdCode,
-                                    event.object.sector.knownname
+                                    readtext.{Main.$tPage}.{6571}, $Ship_IDX, $Ship_Name, event.object.idcode,
+                                    readtext.{Main.$tPage}.{6500}, $RMCommanderName, $RMCommanderIdCode,
+                                    readtext.{Main.$tPage}.{1210}, event.object.sector.knownname
                                     ]" duration="5s" chance="if global.$upbRF_DATA.$Editing.$showhelp then 100 else 0" />
                                     <remove_value name="$capText" />
 
@@ -5384,18 +5430,13 @@
                     3 - lost ships 
                         rebuildcue kaydı yok
                 -->
-                <set_value name="$alertlevel" exact="Main.$alertlevels.$normal" />
-                <set_value name="$alertstatus" exact="table[ 
-                    $level = $alertlevel , 
-                    $text = 'Normal', 
-                    $color = global.$upbRF_DATA.$Editing.$alertcolors.{$alertlevel}
-                ]" />
                 
+                
+                <set_value name="$alertstatus" exact="Main.$alertstatues.$normal" />
 
                 <!-- RFM Entity var mı-->
                 <do_if value="not $RFMCue.$Entity.isclass.entity">
-                    <set_value name="$alertlevel" exact="Main.$alertlevels.$low" />
-                    <set_value name="$alertstatus" exact="table[ $level = $alertlevel , $color = global.$upbRF_DATA.$Editing.$alertcolors.{$alertlevel}, $text = 'RFM Commander no have a Pilot.' ]" />
+                    <set_value name="$alertstatus" exact="Main.$alertstatues.$nopilot" />
                 </do_if>
 
                 <do_if value="$islocked">
@@ -5403,26 +5444,23 @@
                         <do_if value="$entry.$destroyed">
                             <!-- 3 -->
                             <do_if value="not Main.$RebuildCues.{$RFMKey}.{$entry.$id}?">
-                                <do_if value="$alertlevel le Main.$alertlevels.$high">
-                                    <set_value name="$alertlevel" exact="Main.$alertlevels.$high" />
-                                    <set_value name="$alertstatus" exact="table[ $level = $alertlevel, $color = global.$upbRF_DATA.$Editing.$alertcolors.{$alertlevel}, $text = 'There are ship(s) that require manual reBuild.' ]" />
+                                <do_if value="$alertstatus.$level le Main.$alertstatues.$rebuild.$level">
+                                    <set_value name="$alertstatus" exact="Main.$alertstatues.$rebuild" />
                                 </do_if>
                             </do_if>
                             <!-- 2, 1-->
                             <do_else>
                                 <!-- 2 -->
                                 <do_if value="Main.$RebuildCues.{$RFMKey}.{$entry.$id}.$build == null">
-                                    <do_if value="$alertlevel le Main.$alertlevels.$medium">
-                                        <set_value name="$alertlevel" exact="Main.$alertlevels.$medium" />
-                                        <set_value name="$alertstatus" exact="table[ $level = $alertlevel , $color = global.$upbRF_DATA.$Editing.$alertcolors.{$alertlevel}, $text = 'There are ship(s) that cannot find a valid shipyard.' ]" />
+                                    <do_if value="$alertstatus.$level le Main.$alertstatues.$noshipyard.$level">
+                                        <set_value name="$alertstatus" exact="Main.$alertstatues.$noshipyard" />
                                     </do_if>
                                 </do_if>
                                 <!-- 1 -->
                                 <do_else>
                                     <do_if value="not Main.$RebuildCues.{$RFMKey}.{$entry.$id}.$build.isprocessing">
-                                        <do_if value="$alertlevel le Main.$alertlevels.$low">
-                                            <set_value name="$alertlevel" exact="Main.$alertlevels.$low" />
-                                            <set_value name="$alertstatus" exact="table[ $level = $alertlevel , $color = global.$upbRF_DATA.$Editing.$alertcolors.{$alertlevel}, $text = 'Build process queued ship(s) found' ]" />
+                                        <do_if value="$alertstatus.$level le Main.$alertstatues.$queuedship.$level">
+                                            <set_value name="$alertstatus" exact="Main.$alertstatues.$queuedship" />
                                         </do_if>
                                     </do_if>
                                 </do_else>
@@ -8102,7 +8140,7 @@
 
                             <transfer_money from="$shipyard" to="faction.player" amount="$price"/>
                             
-                            <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4013}">
+                            <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4013}">
                                 <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                 <replace string="'$SHIP$'" with="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$name + ' ( ' + $ShipKey + ' )' "/>
                                 <replace string="'$STATUS$'" with="$finishStatus"/>
@@ -8547,7 +8585,7 @@
                             <!-- İstasyon destroy olduğunda oyunun normalinde parayı geri vermiyor, biz geri alacağız -->
                             <transfer_money from="$shipyard" to="faction.player" amount="$price"/>
                             
-                            <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4013}">
+                            <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4013}">
                                 <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                 <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + ' ( ' + $ShipIDX + ' )' "/>
                                 <replace string="'$STATUS$'" with="$finishStatus"/>
@@ -9257,7 +9295,7 @@
                                 
                                 <!-- Özel Durum hatalı Çıkışlar -->
                                 <do_if value="$selectedid == $failcaseOrders.$price">
-                                    <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4011}">
+                                    <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4011}">
                                         <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                         <replace string="'$PRICE$'" with="$respond.$price"/>
@@ -9266,7 +9304,7 @@
                                     <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                                 </do_if>
                                 <do_elseif value="$selectedid == $failcaseOrders.$selectbest">
-                                    <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4012}">
+                                    <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4012}">
                                         <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                     </substitute_text>
@@ -9274,7 +9312,7 @@
                                 </do_elseif>
                                 <!-- Standart Hatalı çıkışlar-->
                                 <do_else>
-                                    <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4013}">
+                                    <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4013}">
                                         <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                         <replace string="'$STATUS$'" with="$finishStatus"/>
@@ -9289,7 +9327,7 @@
                                 <!-- Başarılı çıkış, Üretim Başladı -->
                                 <!-- we can't use the price element because it charges when the build is done, but refunds on cancel! add_build_to_construct_ship-->
                                 <transfer_money from="faction.player" to="$Shipyard" amount="$Price" />
-                                <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4010}">
+                                <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4010}">
                                     <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                     <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                     <replace string="'$SHIPYARD$'" with="$Shipyard.knownname + ' ' + $Shipyard.idcode"/>
@@ -9455,7 +9493,7 @@
                                     <set_value name="$finishStatus" exact="if event.name == 'event_object_destroyed' then 'the station was destroyed' else 'Construction build cancelled'" />
                                     <!-- refund price -->
                                     <transfer_money from="$Shipyard" to="faction.player" amount="$Price"/>
-                                    <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4013}">
+                                    <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4013}">
                                         <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                         <replace string="'$STATUS$'" with="$finishStatus + ' ( \033R' + $lastErrMsg + '\033X )'"/>
@@ -9768,7 +9806,7 @@
                                 bu cue içindeki $ShipIDX SpecRemove olayı içinden -1 olarak değiştirildi 
                         -->
                         <do_if value="$ShipIDX == -1">
-                            <substitute_text text="$LogMsg" source="readtext.{Main.$page}.{4014}">
+                            <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4014}">
                                 <replace string="'$STATUS$'" with="$finishStatus + ' ( \033R' + $lastErrMsg + '\033X )'"/>
                                 <replace string="'$COMMANDER$'" with="if $Ship_Commander then $Ship_Commander.name + ' ' + $Ship_Commander.idcode else ''"/>
                                 <replace string="'$SHIP$'" with="$NewShip.name + ' ' + $NewShip.idcode"/>
