@@ -1378,27 +1378,27 @@
 
                 <set_value name="$alertstatues" exact="table[
                     $normal = table[                    
-                                $level = Main.$alertlevels.$normal, 
+                                $level = $alertlevels.$normal, 
                                 $text  = readtext.{Main.$tPage}.{9050}, 
                                 $color = $alertcolors.{$alertlevels.$normal}
                             ],
                     $nopilot = table[                    
-                                $level = Main.$alertlevels.$low, 
+                                $level = $alertlevels.$low, 
                                 $text  = readtext.{Main.$tPage}.{9051}, 
                                 $color = $alertcolors.{$alertlevels.$low}
                             ],
                     $queuedship = table[                    
-                                $level = Main.$alertlevels.$low, 
+                                $level = $alertlevels.$low, 
                                 $text  = readtext.{Main.$tPage}.{9052}, 
                                 $color = $alertcolors.{$alertlevels.$low}
                             ],
                     $noshipyard = table[                    
-                                $level = Main.$alertlevels.$medium, 
+                                $level = $alertlevels.$medium, 
                                 $text  = readtext.{Main.$tPage}.{9053}, 
                                 $color = $alertcolors.{$alertlevels.$medium}
                             ],
                     $rebuild    = table[                    
-                                $level = Main.$alertlevels.$high, 
+                                $level = $alertlevels.$high, 
                                 $text  = readtext.{Main.$tPage}.{9054}, 
                                 $color = $alertcolors.{$alertlevels.$high}
                             ]

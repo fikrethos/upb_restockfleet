@@ -582,7 +582,6 @@ function menu.onShowMenu()
     menu.infoTableOffsetX = menu.borderOffsetX +  menu.sideBarWidth  + 2 * Helper.borderSize
     menu.infoTableWidth = menu.viewWidth - menu.sideBarWidth  - 4 * Helper.borderSize
     
-
     -- add content
     menu.display()
 
