@@ -6,7 +6,7 @@
         1- Conversation menusündeki textler dil dosyasına bağlandı.
         2- Üretilen gemi mürettebatının Ship Record üzerindeki kayıtlı rütbeleri ile klonlanıp klonlanmayacağı ayarlarlanabiliyor.
         3- Faction relation change kodundaki hata giderildi.
-        4- RemoveShip kodundaki bir hata düzeltildi.
+        4- RemoveShip kodundaki birkaç hata düzeltildi.
         5- Ayarlar ekranındaki Max Allowed Ship Price ve Player Money Threshold kaydırma çubuğunun artış değeri 100,000Cr den 500Cr ye düşürüldü. K kısaltma formatı kaldırıldı.
         6- Manager ekranındaki text butonlar ikon butonu haline çevrildi.
         7- Yeni açılacak RFM için Mevcut RFM'lerden kayıt devralma (Clone RFM) özelliği konuşma menüsüne eklendi.
@@ -546,11 +546,18 @@
                 </do_elseif>
 
                 <do_elseif value="event.param2 == 'changed.UserQuestions.RemoveRFM'">
-                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM" exact="not global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM" />
+                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM" exact="event.param3.{1}" />
                     <debug_text text="'UserQuestions.RemoveRFM changed to %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveRFM]" chance="Main.$DeepDebug"/>
                 </do_elseif>
                 <do_elseif value="event.param2 == 'changed.UserQuestions.RemoveShip'">
-                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip" exact="not global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip" />
+                    <!-- Main.$DeepDebug  <include_actions ref="GlobalConstants" />-->
+                    <!-- 
+                    <debug_text text="'BEFORE E = %s , D = %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip, global.$upbRF_DATA.$Default.$UserQuestions.$RemoveShip]" />
+                    -->
+                    <set_value name="global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip" exact="event.param3.{1}" />
+                    <!-- 
+                    <debug_text text="'AFTER  E = %s , D = %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip, global.$upbRF_DATA.$Default.$UserQuestions.$RemoveShip]" />
+                    -->
                     <debug_text text="'UserQuestions.RemoveShip changed to %s'.[global.$upbRF_DATA.$Editing.$UserQuestions.$RemoveShip]" chance="Main.$DeepDebug"/>
                 </do_elseif>
 
@@ -1274,8 +1281,9 @@
                     1- RFM Commander olmayacak, RFM commander ise filoda kendisinden başka gemi olmayacak
                     2- destroyed olacak
                     3- build verisi olmayacak
+                    <set_value name="$debugchance" exact="100" />
                 -->
-                
+
                 <do_if value="$ShipKey == 1 and Main.$FleetRecords.{$RFMKey}.keys.count == 1">
                     <set_value name="$delete" />
                 </do_if>
@@ -1312,32 +1320,47 @@
                     <debug_text text="'  RFM_%s_%s Loadouts kaydı silindi..'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
                     <!-- Record kaydından çıkarıyoruz-->
                     <remove_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}" />
-                    <debug_text text="'RFM_%s_%s Record kaydından çıkarıldı'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
+                    <debug_text text="'  RFM_%s_%s Record kaydından çıkarıldı'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
 
-                    <run_actions ref="Check_FleetLockStatus">
-                        <param name="RFMKey" value="$RFMKey" />
-                    </run_actions>
-    
-                    <!-- data change notification for open lua -->
-                    <include_actions ref="Set_MDDataChanged" />
+                    <debug_text text="'    FleetRecords.{%s}.count = %s'.[$RFMKey, Main.$FleetRecords.{$RFMKey}.keys.count]" chance="$debugchance"/>
+                    <do_if value="Main.$FleetRecords.{$RFMKey}.keys.count == 0">
+                        <debug_text text="'      Filoda gemi kalmadı. Manager kapatılıyor'.[]" chance="$debugchance"/>
+                        <!-- param $RFMKey Or list [ $RFMKey, $endBy (default 'player'), $IsSpeak (default false), $IsSound (default false), $cancelcue (default true), $removetable (default true) ] -->
+                        <signal_cue_instantly cue="Disable__RFM" param="$RFMKey" />
+                    </do_if>
+                    <do_else>
+                        <run_actions ref="Check_FleetLockStatus">
+                            <param name="RFMKey" value="$RFMKey" />
+                        </run_actions>
 
-                    <set_value name="$pText" exact="'RFM_%s_%s Removed from record data'.[$RFMKey, $ShipKey]" />
-                    <!-- DEBUG : RM_FLEETS File-->
-                    <run_actions ref="Debug_RM_Fleets"/>
-                    <!-- ALL REBUILD CUES -->
-                    <run_actions ref="Debug_AllRebuildCues"/>
-                    <!-- REBUILD CUES -->
-                    <run_actions ref="Debug_RebuildCue">
-                        <param name="RFMKey" value="$RFMKey" />
-                        <param name="inserttext" value="$pText" />
-                    </run_actions>
-                    <!-- DEBUG : Fleet Record File -->
-                    <run_actions ref="Debug_FleetRecord">
-                        <param name="RFMKey" value="$RFMKey" />
-                        <param name="inserttext" value="$pText" />
-                    </run_actions>
+                        <set_value name="$pText" exact="'RFM_%s_%s Removed from record data'.[$RFMKey, $ShipKey]" />
+                        <!-- DEBUG : RM_FLEETS File-->
+                        <run_actions ref="Debug_RM_Fleets"/>
+                        <!-- ALL REBUILD CUES -->
+                        <run_actions ref="Debug_AllRebuildCues"/>
+
+                        <!-- REBUILD CUES -->
+                        <run_actions ref="Debug_RebuildCue">
+                            <param name="RFMKey" value="$RFMKey" />
+                            <param name="inserttext" value="$pText" />
+                        </run_actions>
+                        <!-- DEBUG : Fleet Record File -->
+                        <run_actions ref="Debug_FleetRecord">
+                            <param name="RFMKey" value="$RFMKey" />
+                            <param name="inserttext" value="$pText" />
+                        </run_actions>
+
+                    </do_else>
 
                 </do_if>
+                <do_else>
+                    <debug_text text="' Silme işlemi gerçekleştirilemedi..RFM_%s_%s , recordcounts = %s'.[$RFMKey, $ShipKey, Main.$FleetRecords.{$RFMKey}.keys.count]" />
+                </do_else>
+
+                <!-- data change notification for open lua -->
+                <include_actions ref="Set_MDDataChanged" />
+
+                <raise_lua_event name="'removeship.completed'" />
 
             </actions>
         </library>
@@ -1348,7 +1371,7 @@
             </params>
             <actions>
                 <!-- Update Defaults, Sonradan eklenecek değişkenler için resetleme kontrolü -->
-                <do_if value="not global.$upbRF_DATA.$Default.$v233?">
+                <do_if value="not global.$upbRF_DATA.$Default.$v240?">
                     <set_value name="$changedGlobalDefaults" />
                 </do_if>
 
@@ -1446,7 +1469,7 @@
 
                 <set_value name="global.$upbRF_DATA.$Default" exact="table
                 [
-                    $v233 = null ,
+                    $v240 = null ,
                     $tPage                  = Main.$tPage,
                     $shownotification       = false  ,
                     $showhelp               = true   ,
@@ -1499,13 +1522,22 @@
                 ]"/>
                 <!--   on = c4ff0e , oa = f37865   nn = 37b400 na = dcdc00 -->
                 <do_if value="not global.$upbRF_DATA.$Editing?">
-                    <set_value name="global.$upbRF_DATA.$Editing" exact="table[]"/>
-                    <set_value name="global.$upbRF_DATA.$Editing" exact="global.$upbRF_DATA.$Default"/>
+                    <run_actions ref="TableCopy" result="$clonedata">
+                        <param name="t" value="global.$upbRF_DATA.$Default" />
+                    </run_actions>
+                    <set_value name="global.$upbRF_DATA.$Editing" exact="$clonedata"/>
+                    <remove_value name="$clonedata" />
                 </do_if>
 
+                <!-- 
+                <run_actions ref="DebugPrintValue">
+                    <param name="value" value="global.$upbRF_DATA.$Editing" />
+                </run_actions>
+                -->
                 <remove_value name="$changedGlobalDefaults" />
             </actions>
         </library>
+
 
         <library name="GlobalPersistentVariables">
             <actions>
@@ -2620,11 +2652,7 @@
                             <set_value name="$Entity.$RFM" exact="true"/>
                         </do_if>
 
-                        <set_value name="$alertstatus" exact="table[ 
-                            $level = Main.$alertlevels.$normal , 
-                            $text = 'Normal', 
-                            $color = global.$upbRF_DATA.$Editing.$alertcolors.{Main.$alertlevels.$normal}
-                        ]" />
+                        <set_value name="$alertstatus" exact="Main.$alertstatues.$normal" />
 
                         <do_if value="typeof $refFleetTable != datatype.table">
         
@@ -11594,6 +11622,27 @@
                     <replace string="'\\'" with="''"/>
                 </substitute_text>
                 <return value="$result"/>
+            </actions>
+        </library>
+
+        <library name="TableCopy" purpose="run_actions">
+            <params>
+                <param name="t" />
+            </params>
+            <actions>
+                <set_value name="$t2" exact="table[]" />
+                <do_for_each name="$k" valuename="$v" in="$t">
+                    <do_if value="typeof $v == datatype.table">
+                        <run_actions ref="TableCopy" result="$x">
+                            <param name="t" value="$v" />
+                        </run_actions>
+                        <set_value name="$t2.{$k}" exact="$x" />
+                    </do_if>
+                    <do_else>
+                        <set_value name="$t2.{$k}" exact="$v" />
+                    </do_else>
+                </do_for_each>
+                <return value="$t2"/>
             </actions>
         </library>
 

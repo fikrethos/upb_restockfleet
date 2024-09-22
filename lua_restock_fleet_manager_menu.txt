@@ -501,49 +501,48 @@ function menu.onShowMenu()
     menu.colorNormal, menu.colorAlert = config.sColor.statusGreen, config.sColor.statusRed
     if menu.param[5] and type(menu.param[5]) == "table"  then
 
-        menu.editedSettings = menu.param[5]["Editing"]
-        menu.defaultSettings = menu.param[5]["Default"]
+        menu.defaultSettings = menu.tablecopy( menu.param[5]["Default"] )
+        menu.editedSettings = menu.tablecopy( menu.param[5]["Editing"] )
+
+        menu.defaultSettings.shownotification = menu.defaultSettings.shownotification == 1 
+        menu.defaultSettings.showhelp = menu.defaultSettings.showhelp == 1
+        menu.defaultSettings.write_to_logbook = menu.defaultSettings.write_to_logbook == 1
+        menu.defaultSettings.UsePlayerYards = menu.defaultSettings.UsePlayerYards == 1
+        menu.defaultSettings.UseNPCYards = menu.defaultSettings.UseNPCYards == 1
+        menu.defaultSettings.ValidUpdates.PYards.equipments = menu.defaultSettings.ValidUpdates.PYards.equipments == 1
+        menu.defaultSettings.ValidUpdates.PYards.peoples = menu.defaultSettings.ValidUpdates.PYards.peoples == 1
+        menu.defaultSettings.ValidUpdates.NYards.equipments = menu.defaultSettings.ValidUpdates.NYards.equipments == 1
+        menu.defaultSettings.ValidUpdates.NYards.peoples = menu.defaultSettings.ValidUpdates.NYards.peoples == 1
+        menu.defaultSettings.personnelcloning = menu.defaultSettings.personnelcloning == 1
+        menu.defaultSettings.autobuildafterclone = menu.defaultSettings.autobuildafterclone == 1
+        menu.defaultSettings.UserQuestions.RemoveRFM = menu.defaultSettings.UserQuestions.RemoveRFM == 1
+        menu.defaultSettings.UserQuestions.RemoveShip = menu.defaultSettings.UserQuestions.RemoveShip == 1
+        menu.defaultSettings.DebugFileDetail_Fleets = menu.defaultSettings.DebugFileDetail_Fleets == 1
+        menu.defaultSettings.DebugFileDetail_Records = menu.defaultSettings.DebugFileDetail_Records == 1
+        for key, value in pairs(menu.defaultSettings.failcases) do
+            menu.defaultSettings.failcases[key].check = menu.defaultSettings.failcases[key].check == 1
+        end
 
         -- MD dosyalarındaki; true LUA ya geldiğinde 1, false ise 0 olarak geliyor. Lua için düzenlenmeli.
-        menu.editedSettings.shownotification = (menu.param[5]["Editing"].shownotification == 1) and true or false
-        menu.editedSettings.showhelp = (menu.param[5]["Editing"].showhelp == 1) and true or false
-        menu.editedSettings.write_to_logbook = (menu.param[5]["Editing"].write_to_logbook == 1) and true or false
-        menu.editedSettings.UsePlayerYards = (menu.param[5]["Editing"].UsePlayerYards == 1) and true or false
-        menu.editedSettings.UseNPCYards = (menu.param[5]["Editing"].UseNPCYards == 1) and true or false
-        menu.editedSettings.ValidUpdates.PYards.equipments = (menu.param[5]["Editing"].ValidUpdates.PYards.equipments == 1) and true or false
-        menu.editedSettings.ValidUpdates.PYards.peoples = (menu.param[5]["Editing"].ValidUpdates.PYards.peoples == 1) and true or false
-        menu.editedSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Editing"].ValidUpdates.NYards.equipments == 1) and true or false
-        menu.editedSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Editing"].ValidUpdates.NYards.peoples == 1) and true or false
-        menu.editedSettings.personnelcloning = (menu.param[5]["Editing"].personnelcloning == 1) and true or false
-        menu.editedSettings.autobuildafterclone = (menu.param[5]["Editing"].autobuildafterclone == 1) and true or false
-        menu.editedSettings.UserQuestions.RemoveRFM = (menu.param[5]["Editing"].UserQuestions.RemoveRFM == 1) and true or false
-        menu.editedSettings.UserQuestions.RemoveShip = (menu.param[5]["Editing"].UserQuestions.RemoveShip == 1) and true or false
-        menu.editedSettings.DebugFileDetail_Fleets = (menu.param[5]["Editing"].DebugFileDetail_Fleets == 1) and true or false
-        menu.editedSettings.DebugFileDetail_Records = (menu.param[5]["Editing"].DebugFileDetail_Records == 1) and true or false
+        menu.editedSettings.shownotification = menu.editedSettings.shownotification == 1
+        menu.editedSettings.showhelp = menu.editedSettings.showhelp == 1
+        menu.editedSettings.write_to_logbook = menu.editedSettings.write_to_logbook == 1
+        menu.editedSettings.UsePlayerYards = menu.editedSettings.UsePlayerYards == 1
+        menu.editedSettings.UseNPCYards = menu.editedSettings.UseNPCYards == 1
+        menu.editedSettings.ValidUpdates.PYards.equipments = menu.editedSettings.ValidUpdates.PYards.equipments == 1
+        menu.editedSettings.ValidUpdates.PYards.peoples = menu.editedSettings.ValidUpdates.PYards.peoples == 1
+        menu.editedSettings.ValidUpdates.NYards.equipments = menu.editedSettings.ValidUpdates.NYards.equipments == 1
+        menu.editedSettings.ValidUpdates.NYards.peoples = menu.editedSettings.ValidUpdates.NYards.peoples == 1
+        menu.editedSettings.personnelcloning = menu.editedSettings.personnelcloning == 1
+        menu.editedSettings.autobuildafterclone = menu.editedSettings.autobuildafterclone == 1
+        menu.editedSettings.UserQuestions.RemoveRFM = menu.editedSettings.UserQuestions.RemoveRFM == 1
+        menu.editedSettings.UserQuestions.RemoveShip = menu.editedSettings.UserQuestions.RemoveShip == 1
+        menu.editedSettings.DebugFileDetail_Fleets = menu.editedSettings.DebugFileDetail_Fleets == 1
+        menu.editedSettings.DebugFileDetail_Records = menu.editedSettings.DebugFileDetail_Records == 1
         for key, value in pairs(menu.editedSettings.failcases) do
             menu.editedSettings.failcases[key].check = menu.editedSettings.failcases[key].check == 1
         end
         
-
-
-        menu.defaultSettings.shownotification = (menu.param[5]["Default"].shownotification == 1) and true or false
-        menu.defaultSettings.showhelp = (menu.param[5]["Default"].showhelp == 1) and true or false
-        menu.defaultSettings.write_to_logbook = (menu.param[5]["Default"].write_to_logbook == 1) and true or false
-        menu.defaultSettings.UsePlayerYards = (menu.param[5]["Default"].UsePlayerYards == 1) and true or false
-        menu.defaultSettings.UseNPCYards = (menu.param[5]["Default"].UseNPCYards == 1) and true or false
-        menu.defaultSettings.ValidUpdates.PYards.equipments = (menu.param[5]["Default"].ValidUpdates.PYards.equipments == 1) and true or false
-        menu.defaultSettings.ValidUpdates.PYards.peoples = (menu.param[5]["Default"].ValidUpdates.PYards.peoples == 1) and true or false
-        menu.defaultSettings.ValidUpdates.NYards.equipments = (menu.param[5]["Default"].ValidUpdates.NYards.equipments == 1) and true or false
-        menu.defaultSettings.ValidUpdates.NYards.peoples = (menu.param[5]["Default"].ValidUpdates.NYards.peoples == 1) and true or false
-        menu.defaultSettings.personnelcloning = (menu.param[5]["Default"].personnelcloning == 1) and true or false
-        menu.defaultSettings.autobuildafterclone = (menu.param[5]["Default"].autobuildafterclone == 1) and true or false
-        menu.defaultSettings.UserQuestions.RemoveRFM = (menu.param[5]["Default"].UserQuestions.RemoveRFM == 1) and true or false
-        menu.defaultSettings.UserQuestions.RemoveShip = (menu.param[5]["Default"].UserQuestions.RemoveShip == 1) and true or false
-        menu.defaultSettings.DebugFileDetail_Fleets = (menu.param[5]["Default"].DebugFileDetail_Fleets == 1) and true or false
-        menu.defaultSettings.DebugFileDetail_Records = (menu.param[5]["Default"].DebugFileDetail_Records == 1) and true or false
-        for key, value in pairs(menu.defaultSettings.failcases) do
-            menu.defaultSettings.failcases[key].check = menu.defaultSettings.failcases[key].check == 1
-        end
 
 
         menu.colorNormal = menu.HexToColor(menu.editedSettings.normalColor)
@@ -906,6 +905,8 @@ function menu.buttonToggleObjectList(objectlistparam)
     if newidx then
         SelectRow(menu.sideBarTableID, newidx)
     end
+
+    menu.closeContextMenu()
 
     menu.refreshMainFrame = true
     menu.setdefaulttable = true
@@ -2410,11 +2411,11 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
     
     -- Satır Ekle - Gri ince
     row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
-    row[1]:setColSpan(13):createText("", { height = 3 } )
+    row[1]:setColSpan(13):createText("", { height = Helper.borderSize } )
 
     -- Boş Satır
     row = ftable:addRow(false, { bgColor = config.sColor.transparent })
-    row[1]:setColSpan(Helper.borderSize)
+    row[1]:setColSpan(1):createText("", { height = Helper.borderSize } )
 
     row = ftable:addRow("buttonrow1", { fixed = true, bgColor = config.sColor.transparent, } )
     
@@ -2427,7 +2428,7 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
     local disablebuttonText = isSelectedFleet and string.format("[ %s%s %s \027X]", Helper.convertColorToText(color), ReadText(1134010, 500), tostring(menu.selectedfleet)) or ""
 
     -- Remove RFM
-    mouseOverText = ReadText(1134010, 6025) .. ":"  .. disablebuttonText    -- "Remove RFM From Manager"
+    mouseOverText = ReadText(1134010, 6025) .. " "  .. disablebuttonText    -- "Remove RFM From Manager"
     row[13]:createButton({ active = isSelectedFleet, width = iconH , height = iconH, x = row[13].properties.width /2  , mouseOverText = mouseOverText } )
     :setIcon("rfm_disable", { color = config.Color.text_enemy, width = iconH , height = iconH })
     row[13].handlers.onClick = function() return menu.buttonRemoveRFM() end
@@ -2467,7 +2468,7 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
 
     -- Boş Satır
     row = ftable:addRow(false, { bgColor = config.sColor.transparent })
-    row[1]:setColSpan(Helper.borderSize)
+    row[1]:setColSpan(1):createText("", { height = Helper.borderSize } )
 
 
     -- Satır Ekle - Gri ince
@@ -2490,7 +2491,7 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
     local bottomRTable = ftable
     
     
-    ftable:setColWidth(1, iconH)
+    ftable:setColWidth(1, Helper.standardTextHeight)
     ftable:setColWidth(2, iconH)
     ftable:setColWidth(3, iconH)
     ftable:setColWidth(4, iconH)
@@ -2510,7 +2511,7 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
 
     -- Boş Satır
     row = ftable:addRow(false, { bgColor = config.sColor.transparent })
-    row[1]:setColSpan(Helper.borderSize)
+    row[1]:setColSpan(1):createText("", { height = Helper.borderSize } )
 
     row = ftable:addRow("buttonrow2", { fixed = true, bgColor = config.sColor.transparent, } )
 
@@ -2520,22 +2521,24 @@ function menu.createRFMFBottomTable(frame, ltproperties, rtproperties)
         local nameid = (record.idcode and record.idcode ~= "") and " ( " .. record.idcode .. " ) " or record.idcode
 
         mouseOverText = ReadText(1134010, 6030) .. " " .. string.format("%s%s\027X", Helper.convertColorToText(config.sColor.blue), name .. nameid)  
-        row[11]:createButton({ active = function() return (record.object or record.build) and true or false end, mouseOverText = mouseOverText, width = iconH, height = iconH, cellBGColor = config.Color["row_background"] })
+        row[2]:createButton({ active = function() return (record.object or record.build) and true or false end, mouseOverText = mouseOverText, width = iconH, height = iconH, cellBGColor = config.Color["row_background"] })
         :setIcon("menu_center_selection", { width = iconH, height = iconH  })
-        row[11].handlers.onClick = menu.buttonOnShowMap
+        row[2].handlers.onClick = menu.buttonOnShowMap
     end
 
     -- Remove Ship
-    if record.destroyed and not record.construction.buildingcontainer then
-        local mouseOverText = ReadText(1134010, 6031)  -- "Removes the selected ship from the Restock Fleet records.\nOnly valid for exploded ships that cannot be produced."
-        row[12]:createButton({ active = record.destroyed and not record.construction.buildingcontainer, width = iconH, height = iconH, mouseOverText = mouseOverText  } )
-        :setIcon("rfm_removeship", { color = config.Color.text_hostile, width = iconH, height = iconH  })
-        row[12].handlers.onClick = function() return menu.buttonRemoveShip() end
+    if not menu.removingship then
+        if record.destroyed and not record.construction.buildingcontainer then
+            local mouseOverText = ReadText(1134010, 6031)  -- "Removes the selected ship from the Restock Fleet records.\nOnly valid for exploded ships that cannot be produced."
+            row[3]:createButton({ active = record.destroyed and not record.construction.buildingcontainer, width = iconH, height = iconH, mouseOverText = mouseOverText  } )
+            :setIcon("rfm_removeship", { color = config.Color.text_hostile, width = iconH, height = iconH  })
+            row[3].handlers.onClick = function() return menu.buttonRemoveShip() end
+        end
     end
 
     -- Boş Satır
     row = ftable:addRow(false, { bgColor = config.sColor.transparent })
-    row[1]:setColSpan(Helper.borderSize)
+    row[1]:setColSpan(1):createText("", { height = Helper.borderSize } )
 
     -- Satır Ekle - Gri ince
     --row = ftable:addRow(false, { fixed = true, bgColor = config.sColor.grey } )
@@ -2559,6 +2562,9 @@ end
 
 function menu.createCP_RemoveRFMContext()
 
+    local fleetIdx = menu.findFleet(menu.selectedfleet)
+    local fleet = menu.tablecopy( menu.fleets[fleetIdx] )
+
 	Helper.removeAllWidgetScripts(menu, config.contextLayer)
 
 	menu.contextFrame = Helper.createFrameHandle(menu, {
@@ -2569,7 +2575,7 @@ function menu.createCP_RemoveRFMContext()
 		y = menu.contextMode.y,
 		autoFrameHeight = true,
 	})
-	menu.contextFrame:setBackground("solid", { color = config.Color["frame_background_semitransparent"] })
+	menu.contextFrame:setBackground("solid", { color = config.sColor.available })
 
 	local ftable = menu.contextFrame:addTable(6, { tabOrder = 5, defaultInteractiveObject = true })
 	ftable:setColWidth(1, Helper.scaleY(Helper.standardButtonHeight), false)
@@ -2577,45 +2583,44 @@ function menu.createCP_RemoveRFMContext()
 	ftable:setColWidthPercent(6, 25, false)
 
 	local row = ftable:addRow(false, { fixed = true })
-	row[1]:setColSpan(6):createText(ReadText(1134010, 6032), Helper.headerRowCenteredProperties)  -- "Remove RFM From RFM Records"
+	row[1]:setColSpan(6):createText(ReadText(1134010, 6025), Helper.headerRowCenteredProperties)  -- "Remove RFM From Manager"
+
+    ftable:addEmptyRow()
 
 	local row = ftable:addRow(false, { fixed = true })
-	row[1]:setColSpan(6):createText(ReadText(1134010, 6033) .. " [ " .. ReadText(1134010, 500) .. "_" .. tostring(menu.selectedfleet) .. " ]", { wordwrap = true })     -- "Are you sure you want to remove this?"
+	row[1]:setColSpan(6):createText(ReadText(1134010, 6033), { wordwrap = true })     -- "Are you sure you want to remove this?"
 
 	ftable:addEmptyRow()
+
+    local row = ftable:addRow(false, { fixed = true })
+    row[1]:setColSpan(2):createText("[ " .. ReadText(1134010, 500) .. "_" .. tostring(fleet.id) .. " ]", { halign = "center" })   -- "RFM"
+    row[3]:setColSpan(4):createText(fleet.commander.name, {  })   
+
+    ftable:addEmptyRow()
 
 	local row = ftable:addRow(true, { fixed = true })
 	row[1]:createCheckBox(function () return menu.contextData.saveOption == true end, { height = Helper.standardButtonHeight })
 	row[1].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
-	row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
-	row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
+
+    row[2]:setColSpan(3):createText(ReadText(1134010, 6034), { wordwrap = true })     -- "Do not show again"
+	--row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
+	--row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
 	row[5]:createButton({  }):setText(ReadText(1134010, 1073), { halign = "center" })  -- Confirm
 	row[5].handlers.onClick = menu.buttonCP_RemoveRFMConfirm
 	row[6]:createButton({  }):setText(ReadText(1134010, 1074), { halign = "center" })    -- Cancel
 	row[6].handlers.onClick = menu.buttonCP_RemoveRFMCancel
+
+    ftable:addEmptyRow()
+
 	ftable:setSelectedCol(6)
 
 	menu.contextFrame:display()
 end
 
-function menu.buttonCP_RemoveRFMConfirm()
-
-    menu.editedSettings.UserQuestions.RemoveRFM = menu.contextData.saveOption
-    local controlID = "changed.UserQuestions.RemoveRFM"
-    local screenParam = {}
-    AddUITriggeredEvent(menu.name, controlID, screenParam)
-
-    menu.RemoveRFM()
-
-	menu.closeContextMenu()
-end
-
-function menu.buttonCP_RemoveRFMCancel()
-    --	menu.refreshTitleBar()
-	menu.closeContextMenu()
-end
-
 function menu.createCP_RemoveShipContext()
+
+    local SelectedShip = menu.isSelectedShipLine(menu.shipsTableData.selected)
+    local record = SelectedShip and menu.GetRecord(menu.selectedfleet, SelectedShip)
 
 	Helper.removeAllWidgetScripts(menu, config.contextLayer)
 
@@ -2627,7 +2632,7 @@ function menu.createCP_RemoveShipContext()
 		y = menu.contextMode.y,
 		autoFrameHeight = true,
 	})
-	menu.contextFrame:setBackground("solid", { color = config.Color["frame_background_semitransparent"] })
+	menu.contextFrame:setBackground("solid", { color = config.sColor.available })
 
 	local ftable = menu.contextFrame:addTable(6, { tabOrder = 5, defaultInteractiveObject = true })
 	ftable:setColWidth(1, Helper.scaleY(Helper.standardButtonHeight), false)
@@ -2637,41 +2642,35 @@ function menu.createCP_RemoveShipContext()
 	local row = ftable:addRow(false, { fixed = true })
 	row[1]:setColSpan(6):createText(ReadText(1134010, 6035) .. " [ " .. ReadText(1134010, 500) .. "_" .. tostring(menu.selectedfleet) .. " ]", Helper.headerRowCenteredProperties)        -- "Remove Ship From RFM's Records"
 
+    ftable:addEmptyRow()
+
 	local row = ftable:addRow(false, { fixed = true })
 	row[1]:setColSpan(6):createText(ReadText(1134010, 6036), { wordwrap = true })   -- "Are you sure you want to remove this ship record?"
 
 	ftable:addEmptyRow()
 
+    local row = ftable:addRow(false, { fixed = true })
+    row[1]:setColSpan(2):createText(ReadText(1134010, 6571) .. " [ " .. record.id .. " ]", { halign = "center" })   -- "Ship?"
+    row[3]:setColSpan(4):createText( record.name , {  })   
+
+    ftable:addEmptyRow()
+
 	local row = ftable:addRow(true, { fixed = true })
-	row[1]:createCheckBox(function () return menu.contextData.saveOption == true end, { height = Helper.standardButtonHeight })
+	row[1]:createCheckBox(function () return (menu.contextData.saveOption == true) end, { height = Helper.standardButtonHeight })
 	row[1].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
-	row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
-	row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
+    row[2]:setColSpan(3):createText(ReadText(1134010, 6034), { wordwrap = true })     -- "Do not show again"
+	--row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
+	--row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
 	row[5]:createButton({  }):setText(ReadText(1134010, 1073), { halign = "center" })  -- Confirm
 	row[5].handlers.onClick = menu.buttonCP_RemoveShipConfirm
 	row[6]:createButton({  }):setText(ReadText(1134010, 1074), { halign = "center" })    -- Cancel
 	row[6].handlers.onClick = menu.buttonCP_RemoveShipCancel
+
+    ftable:addEmptyRow()
+
 	ftable:setSelectedCol(6)
 
 	menu.contextFrame:display()
-end
-
-function menu.buttonCP_RemoveShipConfirm()
-    
-    DebugError("menu.contextData.saveOption = " .. tostring(menu.contextData.saveOption) .. "  , menu.editedSettings.UserQuestions.RemoveShip = " .. tostring(menu.editedSettings.UserQuestions.RemoveShip) )
-    menu.editedSettings.UserQuestions.RemoveShip = menu.contextData.saveOption
-    local controlID = "changed.UserQuestions.RemoveShip"
-    local screenParam = {}
-    AddUITriggeredEvent(menu.name, controlID, screenParam)
-
-    menu.RemoveShip()
-    
-	menu.closeContextMenu()
-end
-
-function menu.buttonCP_RemoveShipCancel()
-    --	menu.refreshTitleBar()
-	menu.closeContextMenu()
 end
 
 function menu.closeContextMenu()
@@ -3578,6 +3577,9 @@ function menu.buttonRemoveRFM()
 
     local xdebug = debug0 and DebugError("menu.buttonRemoveRFMClone")
 
+    menu.contextData = menu.contextData or {}
+    menu.contextData.saveOption = menu.editedSettings.UserQuestions.RemoveRFM
+
     if menu.editedSettings.UserQuestions.RemoveRFM then
         menu.RemoveRFM()
     else
@@ -3589,8 +3591,23 @@ function menu.buttonRemoveRFM()
 
 end
 
+function menu.buttonCP_RemoveRFMConfirm()
+    if menu.editedSettings.UserQuestions.RemoveRFM ~= menu.contextData.saveOption then
+        menu.editedSettings.UserQuestions.RemoveRFM = menu.contextData.saveOption
+        local controlID = "changed.UserQuestions.RemoveRFM"
+        local screenParam = {}
+        AddUITriggeredEvent(menu.name, controlID, screenParam)
+    end
+    menu.RemoveRFM()
+	menu.closeContextMenu()
+end
+
+function menu.buttonCP_RemoveRFMCancel()
+	menu.closeContextMenu()
+end
+
 function menu.RemoveRFM()
-    
+
     local rfmKey = menu.selectedfleet
 
     PlaySound("rfm_disable")
@@ -3635,6 +3652,109 @@ function menu.buttonRFMClone()
     AddUITriggeredEvent(menu.name, controlID, screenParam)
 
 end
+
+
+function menu.buttonOnShowMap()
+    -- LUA idleri   ID : xxxx
+    -- 64 idleri    xxxx
+    -- MD ile lua arasındaki alınıp verilen sayısal veriler LUA tipi olmalı 
+    local xdebug = debug0 and DebugError("menu.buttonOnShowMap")
+    local rfmKey = menu.selectedfleet
+    local rfmKeyIndex = menu.findFleet(rfmKey)
+    local shipKey = menu.shipsTableData.selected
+
+    local record = menu.GetRecord(rfmKey, shipKey)
+    
+    local object, object64, objectLUA
+    local name, sectorid, sector, sector64, sectorLUA
+    local showzone, focuscomponent
+
+    if record.object == nil then
+        object = record.shipyard.object
+    else
+        object = record.object
+    end
+    local object64 = ConvertStringTo64Bit(tostring(object))
+    local objectLUA = ConvertStringToLuaID(tostring(object))
+    name, sector, sectorid = GetComponentData(object64, "name", "sector", "sectorid")
+    sector64 = ConvertIDTo64Bit(sectorid)
+    sectorLUA = ConvertStringToLuaID(tostring(sector64))
+    local textDebug = string.format(
+        [[
+        name =  %s
+        object= %s
+        object64 = %s
+        objectLUA = %s
+        sectorid = %s (%s)
+        sector64 = %s
+        sectorLUA = %s ]], name, object, object64, objectLUA, sectorid, sector, sector64, sectorLUA
+    )
+    
+    if IsValidComponent(object) then
+        
+        local xdebug = debug2 and DebugError(textDebug)
+        --local returnparam = { 'show_on_map_target', objectLUA }
+        Helper.closeMenuAndReturn(menu, nil)
+
+        local controlID = "show_on_map_target"
+        local screenParam = objectLUA
+        AddUITriggeredEvent(menu.name, controlID, screenParam)
+
+        menu.cleanup()
+    else
+        PlaySound("ui_notification_pickup_fail")
+        menu.refreshInfoFrame()
+    end    
+
+end
+
+
+function menu.buttonCP_RemoveShipConfirm()
+    if menu.editedSettings.UserQuestions.RemoveShip ~= menu.contextData.saveOption then
+        menu.editedSettings.UserQuestions.RemoveShip = menu.contextData.saveOption
+        local controlID = "changed.UserQuestions.RemoveShip"
+        local screenParam = {menu.contextData.saveOption}
+        AddUITriggeredEvent(menu.name, controlID, screenParam)
+    end
+    menu.RemoveShip()
+	menu.closeContextMenu()
+end
+
+function menu.buttonCP_RemoveShipCancel()
+	menu.closeContextMenu()
+end
+
+function menu.buttonRemoveShip()
+
+    local xdebug = debug0 and DebugError("menu.buttonRebuild")
+
+    menu.contextData = menu.contextData or {}
+    menu.contextData.saveOption = menu.editedSettings.UserQuestions.RemoveShip
+
+    if menu.editedSettings.UserQuestions.RemoveShip then
+        menu.RemoveShip()
+    else
+		menu.contextData.mode = "RemoveShip"
+        menu.displayContextFrame("RemoveShip", Helper.scaleX(400), (Helper.viewWidth - Helper.scaleX(400)) / 2, Helper.viewHeight / 2)
+    end
+    
+end
+
+function menu.RemoveShip()
+
+    local rfmKey = menu.selectedfleet
+    local shipKey = menu.shipsTableData.selected
+
+    menu.shipsTableData.selected = nil
+    
+    menu.removingship = true
+
+    local controlID = "RemoveShip"
+    local screenParam = {rfmKey, shipKey}
+    AddUITriggeredEvent(menu.name, controlID, screenParam)
+
+end
+
 
 function menu.buttonCancelConstruction(container, buildtaskid)
 	--bool CancelConstruction(UniverseID containerid, BuildTaskID id);
@@ -3782,88 +3902,6 @@ function menu.buttonRebuild()
 end
 
 
-function menu.buttonOnShowMap()
-    -- LUA idleri   ID : xxxx
-    -- 64 idleri    xxxx
-    -- MD ile lua arasındaki alınıp verilen sayısal veriler LUA tipi olmalı 
-    local xdebug = debug0 and DebugError("menu.buttonOnShowMap")
-    local rfmKey = menu.selectedfleet
-    local rfmKeyIndex = menu.findFleet(rfmKey)
-    local shipKey = menu.shipsTableData.selected
-
-    local record = menu.GetRecord(rfmKey, shipKey)
-    
-    local object, object64, objectLUA
-    local name, sectorid, sector, sector64, sectorLUA
-    local showzone, focuscomponent
-
-    if record.object == nil then
-        object = record.shipyard.object
-    else
-        object = record.object
-    end
-    local object64 = ConvertStringTo64Bit(tostring(object))
-    local objectLUA = ConvertStringToLuaID(tostring(object))
-    name, sector, sectorid = GetComponentData(object64, "name", "sector", "sectorid")
-    sector64 = ConvertIDTo64Bit(sectorid)
-    sectorLUA = ConvertStringToLuaID(tostring(sector64))
-    local textDebug = string.format(
-        [[
-        name =  %s
-        object= %s
-        object64 = %s
-        objectLUA = %s
-        sectorid = %s (%s)
-        sector64 = %s
-        sectorLUA = %s ]], name, object, object64, objectLUA, sectorid, sector, sector64, sectorLUA
-    )
-    
-    if IsValidComponent(object) then
-        
-        local xdebug = debug2 and DebugError(textDebug)
-        --local returnparam = { 'show_on_map_target', objectLUA }
-        Helper.closeMenuAndReturn(menu, nil)
-
-        local controlID = "show_on_map_target"
-        local screenParam = objectLUA
-        AddUITriggeredEvent(menu.name, controlID, screenParam)
-
-        menu.cleanup()
-    else
-        PlaySound("ui_notification_pickup_fail")
-        menu.refreshInfoFrame()
-    end    
-
-end
-
-function menu.buttonRemoveShip()
-
-    local xdebug = debug0 and DebugError("menu.buttonRebuild")
-
-    if menu.editedSettings.UserQuestions.RemoveShip then
-        menu.RemoveShip()
-    else
-		menu.contextData = menu.contextData or {}
-        menu.contextData.saveOption = false
-		menu.contextData.mode = "RemoveShip"
-        menu.displayContextFrame("RemoveShip", Helper.scaleX(400), (Helper.viewWidth - Helper.scaleX(400)) / 2, Helper.viewHeight / 2)
-    end
-    
-end
-
-function menu.RemoveShip()
-    
-    local rfmKey = menu.selectedfleet
-    local shipKey = menu.shipsTableData.selected
-
-    menu.shipsTableData.selected = nil
-
-    local controlID = "RemoveShip"
-    local screenParam = {rfmKey, shipKey}
-    AddUITriggeredEvent(menu.name, controlID, screenParam)
-
-end
-
 function menu.buttonRestoreDefault()
     PlaySound("rfm_click")
     menu.editedSettings = menu.tablecopy(menu.defaultSettings)
@@ -3927,7 +3965,12 @@ local function changed_buildstations()
 end
 RegisterEvent("buildstations.changed", changed_buildstations)
 
-
+local function removeship_completed()
+    menu.Get_mdData()
+    menu.removingship = nil    
+    menu.refreshInfoFrame()
+end
+RegisterEvent("removeship.completed", removeship_completed)
 
 
 function menu.checkbox_ValidUpdatesPYardsequipments(_, checked)
@@ -4073,6 +4116,7 @@ function menu.onRowChanged(row, rowdata, uitable, modified, input, source)
     local xprint = false
         
     if uitable == menu.managerTable_fleet then
+        
         menu.settoprow =  GetTopRow(menu.managerTable_fleet) 
         menu.setselectedrow =  Helper.currentTableRow[menu.managerTable_fleet]
 
@@ -4092,6 +4136,8 @@ function menu.onRowChanged(row, rowdata, uitable, modified, input, source)
 
         
     if uitable == menu.managerTable_fleetShips then
+        menu.closeContextMenu()
+
         menu.shipsTableData.setselectedrow = row
         menu.shipsTableData.settoprow = GetTopRow(menu.managerTable_fleetShips)
         if (type(rowdata) == "table") and 
@@ -4216,8 +4262,17 @@ function menu.onInteractiveElementChanged(tableid)
 end
 function menu.onCloseElement(dueToClose, layer)
     local xdebug = debug0 and DebugError("menu.onCloseElement " .. tostring(dueToClose) .. " layer " .. tostring(layer) )
-    Helper.closeMenu(menu, dueToClose, layer )
-    menu.cleanup()
+
+    if layer == config.contextLayer then
+        menu.closeContextMenu()
+    else
+        if menu.contextFrame then
+            menu.closeContextMenu()
+        end
+        Helper.closeMenu(menu, dueToClose, layer )
+        menu.cleanup()
+    end
+
 end
 
 
@@ -6508,10 +6563,10 @@ end
 
 --- print table with __pairs method to DebugError 
 ---@param node table
----@param nodename string 
+---@param nodename any 
 ---@param tree any                  -- ( nil = newline and no indentation) or (true = newline and indentation) or (false = no newline and no indentation)
 ---@param IsShowNumberKeys any      -- ( is show { [1] = xxxx, [2] = yyy } else { xxx, yyy } )
----@param indentation number        -- default 1 (number of space characters betwen by tag)
+---@param indentation any        -- default 1 (number of space characters betwen by tag)
 ---@param useConcatResult any       -- ( nil == will use SplittedLines )
 function menu.tablePrint(node, nodename, tree, IsShowNumberKeys, indentation, useConcatResult)
     -- concat edilmiş string bilgisi DebugError için fazla gelebiliyor. Bu yüzden concat edilmeden önceki array lı çıktı lazım bize
