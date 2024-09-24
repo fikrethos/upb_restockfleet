@@ -3,17 +3,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 <!-- Yapılanlar ve düzeltilenler :
         * 
-        1- Conversation menusündeki textler dil dosyasına bağlandı.
-        2- Üretilen gemi mürettebatının Ship Record üzerindeki kayıtlı rütbeleri ile klonlanıp klonlanmayacağı ayarlarlanabiliyor.
-        3- Faction relation change kodundaki hata giderildi.
-        4- RemoveShip kodundaki birkaç hata düzeltildi.
-        5- Ayarlar ekranındaki Max Allowed Ship Price ve Player Money Threshold kaydırma çubuğunun artış değeri 100,000Cr den 500Cr ye düşürüldü. K kısaltma formatı kaldırıldı.
-        6- Manager ekranındaki text butonlar ikon butonu haline çevrildi.
-        7- Yeni açılacak RFM için Mevcut RFM'lerden kayıt devralma (Clone RFM) özelliği konuşma menüsüne eklendi.
-        8- Manager ekranında RFM'nin tam kolonu için buton kondu.
-        9- RemoveShip ve RemoveRFM olayları için oyuncudan onay isteği almak için onay penceresi özelliği eklendi.
-        
-        
+        1- UpbMods menusündeki textler dil dosyasına bağlandı.
+        2- Rebuild bulamamış gemilerde Fleet Commander da RemoveShip ile kayıtlardan çıkarılabiliyor. Bu durumda Main Sublardan threat seviyesi büyük olan seçim alacak.
+        3- RFM promoted Commander başka bir factiona satıldığında RFMnin kapanma hatası giderildi.
+
     -->
     <!-- Yapılacaklar listesi
         
@@ -32,7 +25,7 @@
         * shipplanı çıkarma fonskiyonu stack olayı ile tekrar yazılacak
         * RFM den RFM ye bağlama fonksiyonu yazılacak
         * Luaya Data değişim isteği Raise event ile tekrar yazılabilir
-        *
+        * RFM İstasyonlar için İstasyon inşa özelliği eklenecek
         * * * en son iş (subordinate add, remove, destroy, promoted, fonksiyonlarını delay olmadan tekrar yazılacak.)
     -->
         
@@ -73,10 +66,10 @@
 				</check_any>
 			</conditions>
 			<actions>
-
+                <!-- Main.$tPage -->
 				<do_if value="event.param == 'upb_MODs'" comment="ilerde sadece bu mod un satırı kalacak. Diğer modlarla aynı olacak 'upb_MODs'. her mod un pozisyonu farklı">
-                    <add_player_choice_sub text="'Restock Fleet'" section="upb_RFM_Mainmenu" position="top_left" comment="upb Restock Fleet" />
-					<add_player_choice_return position="bottom_right" text="'Back'" />
+                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1500}" section="upb_RFM_Mainmenu" position="top_left" comment="upb Restock Fleet" />
+					<add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
 				</do_if>
 
 				<do_elseif value="event.param == 'upb_RFM_Mainmenu'">
@@ -98,7 +91,7 @@
                     </do_if>
                     <do_if value="$isfreefleetcommander?">
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
-                            <add_player_choice_sub text="'\33' + Main.$normalColor + 'Enable Restock Fleet' + '\33X'" section="EnableRestockFleet" position="bottom_left"/>
+                            <add_player_choice_sub text="'\33' + Main.$normalColor + readtext.{Main.$tPage}.{1510} + '\33X'" section="EnableRestockFleet" position="bottom_left"/>
                         </do_if>
                         <do_else>
                             <run_actions ref="Get_RFMKey_From_ShipObject" result="$RFMKey">
@@ -107,7 +100,7 @@
                             <do_if value="$RFMKey != null">
                                 <set_value name="$CS" exact="'\33' + (if Main.$RebuildCues.{$RFMKey}.keys.count gt 0 then Main.$alertColor else Main.$normalColor)" />
                                 <set_value name="$CE" exact="'\33X'" />
-                                <add_player_choice text="'[ # ' + $CS + Main.$RebuildCues.{$RFMKey}.keys.count + $CE + ' ]' + ' - ' + 'Disable RFM_' + $RFMKey "  position="bottom_left" section="cSO_RFM_Disable"/>
+                                <add_player_choice text="'[ # ' + $CS + Main.$RebuildCues.{$RFMKey}.keys.count + $CE + ' ]' + ' - ' + readtext.{Main.$tPage}.{1021} + ' ' + readtext.{Main.$tPage}.{500} + '_' + $RFMKey "  position="bottom_left" section="cSO_RFM_Disable"/>
                                 <remove_value name="$CS" />
                                 <remove_value name="$CE" />
                             </do_if>
@@ -119,23 +112,15 @@
                     <remove_value name="$chk2" />
                     <remove_value name="$chk3" />
 
-                    <add_player_choice_sub text="'Manager'"    section="upb_RFM_manager" position="top_left"/>
-                    <add_player_choice_sub text="'Options'"    section="upb_RFM_options" position="top_right"/>
+                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}"    section="csRFM_OpenLua" position="top_left" choiceparam="'manager'" comment="Manager"/>
+                    <add_player_choice_sub text="readtext.{Main.$tPage}.{1060}"    section="csRFM_OpenLua" position="top_right" choiceparam="'options'" comment="Options"/>
                     <!-- 
                     <add_player_choice_sub text="'Test'"    section="upb_RFM_test" position="right"/>
                      -->
-                    <add_player_choice_return position="bottom_right" text="'Back'"/>
+                     <add_player_choice_return text="readtext.{Main.$tPage}.{1070}" position="bottom_right" comment="Back"/>
                 </do_elseif>
-                <do_elseif value="event.param == 'upb_RFM_manager'">
-                    <run_actions ref="SetInformationsToPlayer" />
-                </do_elseif>
-                <do_elseif value="event.param == 'upb_RFM_options'">
-                    <run_actions ref="SetInformationsToPlayer" >
-                        <param name="TableMode" value="'options'" />
-                    </run_actions>
-                </do_elseif>
-                <do_elseif value="event.param == 'upb_RFM_test'">
 
+                <do_elseif value="event.param == 'upb_RFM_test'">
             
                     <add_player_choice_return position="bottom_right" text="'Back'"/>
 
@@ -252,6 +237,7 @@
             <params>
                 <param name="OpenLuaMenu" default="true"/>
                 <param name="RFMKey" default="null" />
+                <param name="entity" default="null" />
                 <param name="TableMode" default="'manager'" />
             </params>
             <actions>
@@ -259,7 +245,18 @@
                 <do_if value="Main.$RM_Fleets?">
                     <do_if value="$OpenLuaMenu">
                         
-
+                        <do_if value="$RFMKey == null">
+                            <do_if value="$entity != null">
+                                <set_value name="$assignedcontrolled" exact="$entity.assignedcontrolled" />
+                                <set_value name="$toplevelcommander" exact="$assignedcontrolled.toplevelcommander"/>
+                                <run_actions ref="Get_RFMKey_From_ShipObject" result="$RFMKey">
+                                    <param name="ship" value="$toplevelcommander" />
+                                </run_actions>
+                                <!-- 
+                                <debug_text text="'$assignedcontrolled = %s %s  ,  $toplevelcommander = %s %s  ,  $RFMKey = %s'.[@$assignedcontrolled.knownname, @$assignedcontrolled.idcode, @$toplevelcommander.knownname, @$toplevelcommander.idcode, @$RFMKey]" />
+                                -->
+                            </do_if>
+                        </do_if>
                         <!-- lua penceresi açılma bayrağı etkin-->
                         <set_value name="player.entity.$md_RFM_DataChanged"/>
                         <!-- data change notification for open lua -->
@@ -1275,56 +1272,162 @@
                 <param name="RFMKey" />
                 <param name="ShipKey" />
                 <param name="debugchance" default="0"/>
+                <param name="deepdebug" default="0"/>
             </params>
             <actions>
                 <!-- record kaydında işlem yapılacak gemi türü
-                    1- RFM Commander olmayacak, RFM commander ise filoda kendisinden başka gemi olmayacak
-                    2- destroyed olacak
-                    3- build verisi olmayacak
+                    1- destroyed olacak
+                    2- çalışan build verisi olmayacak
                     <set_value name="$debugchance" exact="100" />
                 -->
-
-                <do_if value="$ShipKey == 1 and Main.$FleetRecords.{$RFMKey}.keys.count == 1">
-                    <set_value name="$delete" />
-                </do_if>
-                <do_if value="$ShipKey != 1 and Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$destroyed">
+                <set_value name="$debugchance" exact="100" />
+                <set_value name="$deepdebug" exact="100" />
+                <do_if value="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$destroyed">
                     <do_if value="@Main.$RebuildCues.{$RFMKey}.{$ShipKey}.$build == null">
                         <set_value name="$delete" />
                     </do_if>
                 </do_if>
                 <do_if value="$delete?">
+                    <!-- Çıkarılacak geminin mainSublarını buluyoruz -->
                     <run_actions ref="Get_SubKeys_From_FleetRecord" result="$mainsubskeys">
                         <param name="FleetRecord" value="Main.$FleetRecords.{$RFMKey}" />
                         <param name="CommanderKey" value="$ShipKey" />
                     </run_actions>
-                    <!-- Main subların commanderidx değerelerini sileceğimiz geminin commanderidx değerini veriyoruz-->                    
-                    <do_for_each name="$skey" in="$mainsubskeys">
+                    <!-- 
+                        $ShipKey == 1 ise
+                            Seçilen Yeni RMCommanderKey record, rebuild ve loadout tablolarını [1] e taşı
+                            Seçilen Yeni RMCommanderKey ye ait eski record, rebuild ve loadout tablolarını sil
+                            Yeni Record 1 kaydı üzerindeki commander bilgileri düzenlemesini yap
+                            Seçilen Yeni RMCommanderKey e bağlı mainSubların Record.commanderidxlerini 1 yap
+                        $ShipKey != 1 ise
+                            Silinecek geminin mainSublarının commanderidx değerelerine, sileceğimiz geminin kendi commanderidx değerini vereceğiz
+                    -->     
+                    <do_if value="$ShipKey == 1">
+                        <debug_text text="'RFM_%s için Silme İşlemi Başladı. RMCommander Silinecek.'.[$RFMKey, $mainsubskeys]" chance="$debugchance"/>
+                        <debug_text text="'    mainsubskeys = %s '.[$mainsubskeys]" chance="$deepdebug"/>
+                        <do_if value="$mainsubskeys.count gt 0">
+                            <set_value name="$lastscore" exact="0" />
+                            <do_for_each name="$sKey" in="$mainsubskeys">
+                                <set_value name="$macro" exact="Main.$FleetRecords.{$RFMKey}.{$sKey}.$macro" />
+                                <get_threat_score class="$macro.class" purpose="$macro.primarypurpose" result="$score" />
+                                <debug_text text="'   [%s] - %s , score = %s'.[$sKey, $macro.name, $score]" chance="0"/>
+                                <do_if value="$score gt $lastscore">
+                                    <set_value name="$lastscore" exact="$score" />
+                                    <set_value name="$newRMCommanderKey" exact="$sKey" />
+                                    <debug_text text="'     New Selected [%s] - %s , score = %s, $lastscore = %s'.[$sKey, $macro.name, $score, $lastscore]" chance="0"/>
+                                </do_if>
+                            </do_for_each>
+                            <debug_text text="'  Yeni RMCommander key[%s] olarak belirlendi. $lastscore = %s'.[$newRMCommanderKey, $lastscore]" chance="$debugchance"/>
+
+                            <!-- Seçilen yeni commanderin mainSublarını bulalım-->
+                            <run_actions ref="Get_SubKeys_From_FleetRecord" result="$mainsubskeys">
+                                <param name="FleetRecord" value="Main.$FleetRecords.{$RFMKey}" />
+                                <param name="CommanderKey" value="$newRMCommanderKey" />
+                            </run_actions>
+                            <debug_text text="'    Yeni Commander mainsubskeys = %s'.[$mainsubskeys]" chance="$deepdebug"/>
+
+                            <!-- Seçilen yeni comamnder tablolarını tablo.[1] lere Taşıyacağız-->
+                            <!-- RebuildCues Taşı-->
+                            <!-- Taşınmadan önce Eski 1'in çalışan rebuild cuesi varsa silelim-->
+                            <do_if value="Main.$RebuildCues.{$RFMKey}.{1}?">
+                                <do_if value="Main.$RebuildCues.{$RFMKey}.{1}.$cue.exists">
+                                    <debug_text text="'   Eski RMCommander RebuildCues.[%s].[1].cue &lt;%s&gt; sonlandırıldı..'.[$RFMKey, Main.$RebuildCues.{$RFMKey}.{1}.$cue]" chance="$deepdebug"/>
+                                    <cancel_cue cue="Main.$RebuildCues.{$RFMKey}.{1}.$cue" />
+                                </do_if>
+                            </do_if>
+                            <!-- RebuildCue Tablosunu 1e taşıyalım -->
+                            <do_if value="Main.$RebuildCues.{$RFMKey}.{$newRMCommanderKey}?">
+                                <set_value name="Main.$RebuildCues.{$RFMKey}.{1}" exact="Main.$RebuildCues.{$RFMKey}.{$newRMCommanderKey}" />                            
+                                <debug_text text="'  RebuildCues.[%s] -&gt; RebuildCues.[1] e taşındı..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+                                <!-- Taşınan Eski RebuildCue tablosunu silelim, tablo 1'e taşındığı için cuesini sonlandırmıyoruz -->
+                                <remove_value name="Main.$RebuildCues.{$RFMKey}.{$newRMCommanderKey}" />
+                                <debug_text text="'    Taşınan Eski RebuildCues.[%s] tablosu silindi..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+                            </do_if>
+
+                            <!-- Records Taşı-->
+                            <!-- Record Tablosunu 1e taşıyıp rmcommander için hazırlayalım -->
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}" exact="Main.$FleetRecords.{$RFMKey}.{$newRMCommanderKey}" />
+                            <debug_text text="'  FleetRecords.[%s] -&gt; FleetRecords.[1] e taşındı..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}.$assignment" exact="null" />
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}.$commanderidx" exact="-1" />
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}.$subordinategroupid" exact="-1" />
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}.$subordinategrouptext" exact="''" />
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{1}.$id" exact="1" />
+                            <debug_text text="'    FleetRecords.[1] güncellendi... [name = %s &lt;%s&gt; id = %s]'.[Main.$FleetRecords.{$RFMKey}.{1}.$name, Main.$FleetRecords.{$RFMKey}.{1}.$object, Main.$FleetRecords.{$RFMKey}.{1}.$id ]" chance="$deepdebug"/>
+                            <!-- Taşınan Eski Record tablosunu siliyoruz-->
+                            <remove_value name="Main.$FleetRecords.{$RFMKey}.{$newRMCommanderKey}" />
+                            <debug_text text="'    Taşınan Eski FleetRecords.[%s] tablosu silindi..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+                            
+                            <!-- Loadouts Taşı-->
+                            <!-- Loadouts tablosunu 1e taşıyalım-->
+                            <set_value name="Main.$Loadouts.{$RFMKey}.{1}" exact="Main.$Loadouts.{$RFMKey}.{$newRMCommanderKey}" />
+                            <debug_text text="'  Loadouts.[%s] -&gt; Loadouts.[1] e taşındı..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+                            <!-- Taşınan Eski Loadout kaydını silelim -->
+                            <remove_value name="Main.$Loadouts.{$RFMKey}.{$newRMCommanderKey}" />
+                            <debug_text text="'    Taşınan Eski Loadouts.[%s] tablosu silindi..'.[$newRMCommanderKey]" chance="$deepdebug"/>
+
+                            <!-- Seçilen RMCommanderın mainSublarını kendisine bağlayalım-->
+                            <do_for_each name="$skey" in="$mainsubskeys">
+                                <set_value name="Main.$FleetRecords.{$RFMKey}.{$skey}.$commanderidx" exact="1" />
+                                <debug_text text="'    (Sub %s) yeni commander.idx bağlandı -&gt; ( 1-%s )'.[$skey, Main.$FleetRecords.{$RFMKey}.{1}.$name]" chance="$deepdebug"/>
+                            </do_for_each>
+
+                            <!-- RMFleets Düzenle-->
+                            <!-- Yeni RMCommanderın eski keyini Fleet destroyedShipKeys listesinden çıkaralım -->
+                            <do_if value="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys.indexof.{$newRMCommanderKey}">
+                                <remove_from_list name="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$newRMCommanderKey" />
+                                <debug_text text="'  [%s] - RM_Fleets.[%s].destroyedShipKeys listesinden silindi..'.[$newRMCommanderKey, $RFMKey]" chance="$deepdebug"/>
+                            </do_if>
+                            <!-- commander.name,  commander.object bilgilerini yeni commandera göre düzenle -->
+                            <set_value name="Main.$RM_Fleets.{$RFMKey}.$commander.$object" exact="Main.$FleetRecords.{$RFMKey}.{1}.$object" />
+                            <set_value name="Main.$RM_Fleets.{$RFMKey}.$commander.$name" exact="Main.$FleetRecords.{$RFMKey}.{1}.$name" />
+                            <!-- Yeni Commander halihazırdaki promoted ise shipid bilgisini de güncelle-->
+                            <do_if value="Main.$RM_Fleets.{$RFMKey}.$shipid == $newRMCommanderKey">
+                                <set_value name="Main.$RM_Fleets.{$RFMKey}.$shipid" exact="1" />
+                            </do_if>
+                            <debug_text text="'  RM_Fleets.[%s].commander bilgisi güncellendi.. [name = %s &lt;%s&gt; shipid = %s]'.[$RFMKey, Main.$RM_Fleets.{$RFMKey}.$commander.$name, Main.$RM_Fleets.{$RFMKey}.$commander.$object, Main.$RM_Fleets.{$RFMKey}.$shipid]" chance="$deepdebug"/>
+                        </do_if>
+                        <!-- Sadece kendisi varsa RFM kapatılacak-->
+                        <do_else>
+                            <set_value name="$closeRFM" />
+                        </do_else>
+                    </do_if>
+                    <do_else>
+                        <debug_text text="'RFM_%s için Silme İşlemi Başladı. Sub.[%s] Silinecek...'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
+                        <!-- Çıkarılan geminin commander indexi -->
                         <set_value name="$newcommanderidx" exact="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$commanderidx" />
-                        <set_value name="Main.$FleetRecords.{$RFMKey}.{$skey}.$commanderidx" exact="$newcommanderidx" />
-                        <debug_text text="'  RFM_%s (Sub %s) yeni commandera ( %s-%s ) bağlandı..'.[$RFMKey, $skey, $newcommanderidx, Main.$FleetRecords.{$RFMKey}.{$newcommanderidx}.$name]" chance="$debugchance"/>
-                    </do_for_each>
-                    <!-- RMFleets destroyed lsitesinden çıkarıyoruz -->
-                    <do_if value="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys.indexof.{$ShipKey}">
-                        <remove_from_list name="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$ShipKey" />
-                        <debug_text text="'  RFM_%s_%s RM_Fleets destroyedShipKeys listesinden silindi..'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
-                    </do_if>
+                        <do_for_each name="$skey" in="$mainsubskeys">
+                            <set_value name="Main.$FleetRecords.{$RFMKey}.{$skey}.$commanderidx" exact="$newcommanderidx" />
+                            <debug_text text="'  RFM_%s (Sub %s) yeni commandera ( %s-%s ) bağlandı..'.[$RFMKey, $skey, $newcommanderidx, Main.$FleetRecords.{$RFMKey}.{$newcommanderidx}.$name]" chance="$deepdebug"/>
+                        </do_for_each>
 
-                    <!-- RebuildCue'sini ve tablosunu siliyoruz-->
-                    <do_if value="Main.$RebuildCues.{$RFMKey}.{$ShipKey}?">
-                        <debug_text text="'  RFM_%s_%s cue.%s sonlandırılıp RebuildCues kaydı silindi..'.[$RFMKey, $ShipKey, Main.$RebuildCues.{$RFMKey}.{$ShipKey}.$cue]" chance="$debugchance"/>
-                        <cancel_cue cue="Main.$RebuildCues.{$RFMKey}.{$ShipKey}.$cue" />
-                        <remove_value name="Main.$RebuildCues.{$RFMKey}.{$ShipKey}" />
-                    </do_if>
-                    <!-- Loadout Tablosunu siliyoruz kaydından çıkarıyoruz-->
-                    <remove_value name="Main.$Loadouts.{$RFMKey}.{$ShipKey}" />
-                    <debug_text text="'  RFM_%s_%s Loadouts kaydı silindi..'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
-                    <!-- Record kaydından çıkarıyoruz-->
-                    <remove_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}" />
-                    <debug_text text="'  RFM_%s_%s Record kaydından çıkarıldı'.[$RFMKey, $ShipKey]" chance="$debugchance"/>
+                        <!-- RMFleets destroyed lsitesinden çıkarıyoruz -->
+                        <do_if value="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys.indexof.{$ShipKey}">
+                            <remove_from_list name="Main.$RM_Fleets.{$RFMKey}.$destroyedShipKeys" exact="$ShipKey" />
+                            <debug_text text="'  RFM_%s_%s RM_Fleets destroyedShipKeys listesinden silindi..'.[$RFMKey, $ShipKey]" chance="$deepdebug"/>
+                        </do_if>
 
-                    <debug_text text="'    FleetRecords.{%s}.count = %s'.[$RFMKey, Main.$FleetRecords.{$RFMKey}.keys.count]" chance="$debugchance"/>
-                    <do_if value="Main.$FleetRecords.{$RFMKey}.keys.count == 0">
-                        <debug_text text="'      Filoda gemi kalmadı. Manager kapatılıyor'.[]" chance="$debugchance"/>
+                        <!-- RebuildCue'sini ve tablosunu siliyoruz-->
+                        <do_if value="Main.$RebuildCues.{$RFMKey}.{$ShipKey}?">
+                            <debug_text text="'   RFM_%s_%s cue.%s sonlandırılıp RebuildCues kaydı silindi..'.[$RFMKey, $ShipKey, Main.$RebuildCues.{$RFMKey}.{$ShipKey}.$cue]" chance="$deepdebug"/>
+                            <cancel_cue cue="Main.$RebuildCues.{$RFMKey}.{$ShipKey}.$cue" />
+                            <remove_value name="Main.$RebuildCues.{$RFMKey}.{$ShipKey}" />
+                        </do_if>
+
+                        <!-- Loadout Tablosunu siliyoruz kaydından çıkarıyoruz-->
+                        <remove_value name="Main.$Loadouts.{$RFMKey}.{$ShipKey}" />
+                        <debug_text text="'  RFM_%s_%s Loadouts kaydı silindi..'.[$RFMKey, $ShipKey]" chance="$deepdebug"/>
+
+                        <!-- Record Tablosunu siliyoruz -->
+                        <remove_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}" />
+                        <debug_text text="'  RFM_%s_%s Record kaydı silindi..'.[$RFMKey, $ShipKey]" chance="$deepdebug"/>
+                    </do_else>
+
+                    <!-- Filoda kayıt kaldı mı?-->
+                    <debug_text text="'    FleetRecords.{%s}.count = %s , $closeRFM? %s'.[$RFMKey, Main.$FleetRecords.{$RFMKey}.keys.count, $closeRFM?]" chance="$deepdebug"/>
+                    <do_if value="Main.$FleetRecords.{$RFMKey}.keys.count == 0 or $closeRFM?">
+                        <remove_value name="$closeRFM" />
+                        <debug_text text="'    Filoda gemi kalmadı. Manager kapatılıyor'.[]" chance="$debugchance"/>
                         <!-- param $RFMKey Or list [ $RFMKey, $endBy (default 'player'), $IsSpeak (default false), $IsSound (default false), $cancelcue (default true), $removetable (default true) ] -->
                         <signal_cue_instantly cue="Disable__RFM" param="$RFMKey" />
                     </do_if>
@@ -1352,9 +1455,10 @@
 
                     </do_else>
 
+                    <debug_text text="'Silme işlemi tamamlandı... RFM_%s'.[$RFMKey]" chance="$debugchance"/>
                 </do_if>
                 <do_else>
-                    <debug_text text="' Silme işlemi gerçekleştirilemedi..RFM_%s_%s , recordcounts = %s'.[$RFMKey, $ShipKey, Main.$FleetRecords.{$RFMKey}.keys.count]" />
+                    <debug_text text="'Silme işlemi gerçekleştirilemedi..RFM_%s_%s , recordcounts = %s'.[$RFMKey, $ShipKey, Main.$FleetRecords.{$RFMKey}.keys.count]" />
                 </do_else>
 
                 <!-- data change notification for open lua -->
@@ -2416,6 +2520,7 @@
                         <do_elseif value="event.param == 'csRFM_OpenLua'">
                             <run_actions ref="md.Upb_Restock_Fleet.SetInformationsToPlayer" >
                                 <param name="TableMode" value="event.param2" />
+                                <param name="entity" value="event.object" />
                             </run_actions>
                         </do_elseif>
                         
@@ -2877,8 +2982,8 @@
                                 <!-- 
                                 <debug_text text="'2 event.name = %s, param = %s, param2 = %s, param3 = %s '.[event.name, @event.param, @event.param2, @event.param3]" />
                                 -->
-                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}" position="top_left" section="cSO_RFM_Manager" comment="Management"/>
-                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1060}" position="top_right" section="cSO_RFM_Options" comment="Options"/>
+                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1050}" position="top_left" section="cSO_RFM_OpenLua" choiceparam="'manager'" comment="Management"/>
+                                <add_player_choice_sub text="readtext.{Main.$tPage}.{1060}" position="top_right" section="cSO_RFM_OpenLua" choiceparam="'options'" comment="Options"/>
                                 
                                 <add_player_choice_sub text="readtext.{Main.$tPage}.{1090} + ' ' + readtext.{Main.$tPage}.{1101}" position="bottom_left" section="cSO_RFM_More_1" comment="More 1"/>
                                 
@@ -2955,17 +3060,11 @@
                                     <signal_cue_instantly cue="Disable__RFM" param="[$RFMKey, 'Player', true, true ]" />
                                 </do_elseif>
 
-                                <do_elseif value="event.param == 'cSO_RFM_Manager'">
+                                <do_elseif value="event.param == 'cSO_RFM_OpenLua'">
                                     <run_actions ref="md.Upb_Restock_Fleet.SetInformationsToPlayer" >
-                                        <param name="OpenLuaMenu" value="true"/>
+                                        <param name="TableMode" value="event.param2" />
                                         <param name="RFMKey" value="$RFMKey" />
-                                    </run_actions>
-                                </do_elseif>
-
-                                <do_elseif value="event.param == 'cSO_RFM_Options'">
-                                    <run_actions ref="md.Upb_Restock_Fleet.SetInformationsToPlayer" >
-                                        <param name="RFMKey" value="$RFMKey" />
-                                        <param name="TableMode" value="'options'" />
+                                        <param name="entity" value="event.object" />
                                     </run_actions>
                                 </do_elseif>
 
@@ -3440,6 +3539,59 @@
                             </actions>
                         </cue>
 
+                        <!-- Filo Commanderi dışındakiler için remove olayı gerçekleşiyor
+                            sublar için ownerchanged durumunda remove olayı kontrolü ele alıyor.
+                            Bu yüzden sadece promoted komutan için kontrol yapacağız.
+                                Egosoft; commander satıldığında altındaki filoyu disband ediyor.
+                            Disband olayına dokunmayacağız, sadece PromotedCommander satılmış ise RFM'yi kapatacağız
+                            * remove olaylarındaki delaylardan dolayı önce changed_owner olayı geliyor, 
+                                remove olaylarının bitmesinden sonra kapatılmalı. bu yüzden buraya da delay ekleyeceğiz.
+                        -->
+                        <cue name="Changed_Owner" instantiate="true">
+                            <conditions>
+                                <check_any>
+                                    <event_object_changed_owner group="$Promoted"/>
+                                </check_any>
+                            </conditions>
+                            <delay exact="2ms" comment="+1ms destroy delay den sonra oluşması için ve remove ile aynı duruma getirdik."/>
+                            <actions>
+                                <set_value name="$tShip"  exact="event.object"/>
+                                <set_value name="$tShipKey" exact="@$fleetshipsByComp.{$tShip}" />
+                                <do_if value="@event.object.isactive == null" >
+                                    <set_value name="$invalid" />
+                                </do_if>
+
+                                <debug_text text="'\n
+                                CHANGED OWNER  \n
+                                    %s   \n
+                                        RFMKey : %s   [table idx : %s] \n
+                                            %s \n
+                                            RFM Cancelling?    %s  \n
+                                            object      : (isWreck %s) (exists %s) (isactive %s) (isoperational %s) %s %s &lt;%s&gt;    \n
+                                            new faction : &lt;%s&gt;\n
+                                            old faction : &lt;%s&gt;\n
+                                            PromotedCommander : [%s] %s %s &lt;%s&gt;
+                                            '.[
+                                            if @Main.$RM_Fleets.{$RFMKey}.$isLockedFleet then 'LOCKED' else 'open',
+                                            $RFMKey, @$fleetshipsByComp.{event.object}, 
+                                            if $Subordinates.indexof.{event.object} then 'Subordinates() İÇİNDE' else 'Subordinates() DIŞINDA',
+                                            (if $Cancelling? then 'YES' else 'no'),
+                                            event.object.iswreck, event.object.exists, @event.object.isactive, event.object.isoperational,
+                                            if not $invalid? then event.object.knownname else '(invalid)', if not $invalid? then event.object.idcode else '', event.object, 
+                                            event.param, event.param2,
+                                            @$fleetshipsByComp.{$PromotedCommander}, @$PromotedCommander.knownname, @$PromotedCommander.idcode, $PromotedCommander
+                                            ]"  chance="Main.$ChangesOnFleetDebug"/>
+                                
+                                <!-- Promoted patlayıp yerine birisi geçerse bu olay tetiklenmez, ancak;
+                                    patlamadan sonra promoted olabilecek gemi bulunamaz ise (üretilemez ya da filoda başka gemi kalmamıştır) bu olay tetiklenir. -->
+                                <!-- Bu yüzden owner değişimi patlamadan dolayı kaynaklanmayacak ya da factionu değişmiş olduğunda RFM kapanacak. -->
+                                <do_if value="event.object.isoperational or ( event.param != '' and not event.param == faction.player) ">
+                                    <!-- param $RFMKey Or list [ $RFMKey, $endBy (default 'player'), $IsSpeak (default false), $IsSound (default false), $cancelcue (default true), $removetable (default true) ] -->
+                                    <signal_cue_instantly cue="Disable__RFM" param="[$RFMKey, 'Changed Owner', false, true]"/>
+                                </do_if>
+
+                            </actions>
+                        </cue>
                         <!-- Olay sıralarını değişmek için delay eklendi-->
                         <!-- normalde Destroy en sonda oluşuyor, add ve remove olayını en geçe alıcağız-->
                         <!-- -->
@@ -8173,7 +8325,7 @@
                                 <replace string="'$SHIP$'" with="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$name + ' ( ' + $ShipKey + ' )' "/>
                                 <replace string="'$STATUS$'" with="$finishStatus"/>
                             </substitute_text>
-                            <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" money="$price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                            <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" money="$price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                         </do_if>
 
                         <run_actions ref="Check_FleetLockStatus">
@@ -8618,7 +8770,7 @@
                                 <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + ' ( ' + $ShipIDX + ' )' "/>
                                 <replace string="'$STATUS$'" with="$finishStatus"/>
                             </substitute_text>
-                            <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" money="$price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                            <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" money="$price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                             
                             <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$object" exact="null"/>
                             <set_value name="Main.$FleetRecords.{$RFMKey}.{$ShipKey}.$idcode" exact="''"/>
@@ -9243,33 +9395,36 @@
 
                                         <set_value name="$buildresponds" exact="table[]" />
                                         <do_if value="$playermoney lt $Price">
+                                            <!-- The calculated ship cost (%s Cr) exceeded the players available funds (%s Cr).-->
                                             <set_value name="$buildresponds.$price" exact="table[ 
                                                 $checkcase = $failcases.$price.$id, 
                                                 $price = $Price, 
                                                 $fundsmoney = $playermoney,
-                                                $statusmsg = 'The calculated ship cost (%s Cr) exceeded the players available funds (%s Cr).'.[$Price.formatted.default, $playermoney.formatted.default]
+                                                $statusmsg = readtext.{Main.$tPage}.{9012}.[$Price.formatted.default, $playermoney.formatted.default]
                                                 ]" />
                                         </do_if>
                                         <do_else>
                                             <do_if value="not $passingcriterias.indexof.{'price'}">
                                                 <do_if value="$playermoney gt $playermoneythreshold_ct and ( ($playermoney - $Price) ge $playermoneythreshold_ct)" comment="CONSTRUCT SHIP ...">
                                                     <do_if value="($maxallowedpricepership_ct gt 0Cr) and ($Price gt $maxallowedpricepership_ct)">
+                                                        <!-- The calculated ship cost (%s Cr) exceeded the ship production allowed cost (%s Cr).-->
                                                         <set_value name="$buildresponds.$price" exact="table[ 
                                                             $checkcase = $failcases.$price.$id, 
                                                             $price = $Price, 
                                                             $checkmoney = $maxallowedpricepership_ct,
-                                                            $statusmsg = 'The calculated ship cost (%s Cr) exceeded the ship production allowed cost (%s Cr).'.[$Price.formatted.default, $maxallowedpricepership_ct.formatted.default]
+                                                            $statusmsg = readtext.{Main.$tPage}.{9013}.[$Price.formatted.default, $maxallowedpricepership_ct.formatted.default]
                                                             ]" />
                                                     </do_if>
                                                 </do_if>
                                                 <do_else>
                                                     <do_if value="$playermoneythreshold_ct gt 0Cr">
+                                                        <!-- After the calculated ship fee (%s Cr) is deducted from the player\'s money, (%s Cr) the remaining amount is less than the set money threshold %s Cr.-->
                                                         <set_value name="$buildresponds.$price" exact="table[ 
                                                         $checkcase   = $failcases.$price.$id, 
                                                         $price       = $Price, 
                                                         $playermoney = $playermoney,
                                                         $checkmoney  = $playermoneythreshold_ct,
-                                                        $statusmsg   = 'After the calculated ship fee (%s Cr) is deducted from the player\'s money, (%s Cr) the remaining amount is less than the set money threshold %s Cr.'.[$Price.formatted.default, ($playermoney - $Price).formatted.default, $playermoneythreshold_ct.formatted.default]
+                                                        $statusmsg   = readtext.{Main.$tPage}.{9014}.[$Price.formatted.default, ($playermoney - $Price).formatted.default, $playermoneythreshold_ct.formatted.default]
                                                         ]" />
                                                     </do_if>
                                                 </do_else>
@@ -9329,14 +9484,14 @@
                                         <replace string="'$PRICE$'" with="$respond.$price"/>
                                         <replace string="'$MONEY$'" with="faction.player.money"/>
                                     </substitute_text>
-                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                                 </do_if>
                                 <do_elseif value="$selectedid == $failcaseOrders.$selectbest">
                                     <substitute_text text="$LogMsg" source="readtext.{Main.$tPage}.{4012}">
                                         <replace string="'$COMMANDER$'" with="'RFM_' + $RFMKey + '_' "/>
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                     </substitute_text>
-                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                                 </do_elseif>
                                 <!-- Standart Hatalı çıkışlar-->
                                 <do_else>
@@ -9345,7 +9500,7 @@
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                         <replace string="'$STATUS$'" with="$finishStatus"/>
                                     </substitute_text>
-                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                                 </do_else>
                                 
                                 <include_actions ref="Reset_RebuildShip" />
@@ -9361,7 +9516,7 @@
                                     <replace string="'$SHIPYARD$'" with="$Shipyard.knownname + ' ' + $Shipyard.idcode"/>
                                     <replace string="'$SECTOR$'" with="$Shipyard.sector.knownname"/>
                                 </substitute_text>
-                                <write_to_logbook object="$Shipyard" category="upkeep" interaction="showonmap" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" money="if $Price gt 0Cr then ($Price * -1) else $Price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                                <write_to_logbook object="$Shipyard" category="upkeep" interaction="showonmap" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" money="if $Price gt 0Cr then ($Price * -1) else $Price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
 
                                 <do_if value="typeof $Ship_Loadout == datatype.loadout">
                                     <debug_text text="'    OK   loadout, macro = %s , loadout = %s , wares.list = %s , yard = %s %s'.[$Ship_Macro, $Ship_Loadout, $Ship_Loadout.wares.list, $Shipyard.idcode, $Shipyard.knownname]" chance="Main.$DeepDebug" />
@@ -9526,7 +9681,7 @@
                                         <replace string="'$SHIP$'" with="$Ship_Name + ' ' + $Ship_IdCode + (if Main.$DebugChance == 100 then ' (' + $ShipIDX + ')' else '') "/>
                                         <replace string="'$STATUS$'" with="$finishStatus + ' ( \033R' + $lastErrMsg + '\033X )'"/>
                                     </substitute_text>
-                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" money="$Price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                                    <write_to_logbook category="upkeep" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" money="$Price" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
 
                                     <!--event_object_destroyed olayını resetleyeceğiz. (rebuildcue tablo kaydı boşalacak ve yeniden uygun construct için aramaya girecek )
                                         event_build_cancelled olayını resetlemiyoruz. 
@@ -9841,7 +9996,7 @@
                                 <replace string="'$SHIPYARD$'" with="$Shipyard.name + ' ' + $Shipyard.idcode"/>
                                 <replace string="'$SECTOR$'" with="$NewShip.sector.knownname"/>
                             </substitute_text>
-                            <write_to_logbook object="$NewShip" category="upkeep" interaction="showonmap" title="'\033' + Main.$normalColor + 'Restock Manager\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
+                            <write_to_logbook object="$NewShip" category="upkeep" interaction="showonmap" title="'\033' + Main.$normalColor + readtext.{Main.$tPage}.{2} + '\033X'" text="$LogMsg" chance="if global.$upbRF_DATA.$Editing.$write_to_logbook then 100 else 0"/>
                             <debug_text text="'   A L E R T    $oldShipIDX = %s , $ShipIDX = %s (%s %s), %s , %s'.[$oldShipIDX, $ShipIDX, $NewShip.name, $NewShip.idcode, $finishStatus, $lastErrMsg]" />
                             <play_sound object="player.entity" sound="'ui_notification_player_alert_04'"/>
                         </do_if>
