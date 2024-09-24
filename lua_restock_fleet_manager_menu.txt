@@ -2592,19 +2592,19 @@ function menu.createCP_RemoveRFMContext()
 
 	ftable:addEmptyRow()
 
+    local selrfmtext = string.format("[ %s%s %s \027X]", Helper.convertColorToText(config.Color.text_enemy), ReadText(1134010, 500), tostring(fleet.id))
     local row = ftable:addRow(false, { fixed = true })
-    row[1]:setColSpan(2):createText("[ " .. ReadText(1134010, 500) .. "_" .. tostring(fleet.id) .. " ]", { halign = "center" })   -- "RFM"
+    row[1]:setColSpan(2):createText(selrfmtext, { halign = "center" })   -- "RFM"
     row[3]:setColSpan(4):createText(fleet.commander.name, {  })   
 
     ftable:addEmptyRow()
 
+    local mouseOverText = ReadText(1134010, 6041)   -- Once confirmed, this option will appear again when the settings are reset to default.
 	local row = ftable:addRow(true, { fixed = true })
-	row[1]:createCheckBox(function () return menu.contextData.saveOption == true end, { height = Helper.standardButtonHeight })
+	row[1]:createCheckBox(function () return menu.contextData.saveOption == true end, { height = Helper.standardButtonHeight, mouseOverText = mouseOverText })
 	row[1].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
-
-    row[2]:setColSpan(3):createText(ReadText(1134010, 6034), { wordwrap = true })     -- "Do not show again"
-	--row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
-	--row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
+	row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"], mouseOverText = mouseOverText }):setText(ReadText(1134010, 6034)) -- "Do not show again"
+	row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption; menu.createCP_RemoveRFMContext(); end
 	row[5]:createButton({  }):setText(ReadText(1134010, 1073), { halign = "center" })  -- Confirm
 	row[5].handlers.onClick = menu.buttonCP_RemoveRFMConfirm
 	row[6]:createButton({  }):setText(ReadText(1134010, 1074), { halign = "center" })    -- Cancel
@@ -2634,7 +2634,7 @@ function menu.createCP_RemoveShipContext()
 	})
 	menu.contextFrame:setBackground("solid", { color = config.sColor.available })
 
-	local ftable = menu.contextFrame:addTable(6, { tabOrder = 5, defaultInteractiveObject = true })
+	local ftable = menu.contextFrame:addTable(6, { tabOrder = 2, defaultInteractiveObject = true })
 	ftable:setColWidth(1, Helper.scaleY(Helper.standardButtonHeight), false)
 	ftable:setColWidthPercent(5, 25, false)
 	ftable:setColWidthPercent(6, 25, false)
@@ -2649,18 +2649,20 @@ function menu.createCP_RemoveShipContext()
 
 	ftable:addEmptyRow()
 
+    local seltext = string.format("%s [ %s %s \027X]", ReadText(1134010, 6571), Helper.convertColorToText(config.Color.text_enemy), tostring(record.id))
+    local name = string.format("%s%s\027X", Helper.convertColorToText(config.Color.text_enemy), tostring(record.name))
     local row = ftable:addRow(false, { fixed = true })
-    row[1]:setColSpan(2):createText(ReadText(1134010, 6571) .. " [ " .. record.id .. " ]", { halign = "center" })   -- "Ship?"
-    row[3]:setColSpan(4):createText( record.name , {  })   
+    row[1]:setColSpan(2):createText(seltext, { halign = "center" })   -- "Ship?"
+    row[3]:setColSpan(4):createText( name , {  })   
 
     ftable:addEmptyRow()
 
+    local mouseOverText = ReadText(1134010, 6041)   -- Once confirmed, this option will appear again when the settings are reset to default.
 	local row = ftable:addRow(true, { fixed = true })
-	row[1]:createCheckBox(function () return (menu.contextData.saveOption == true) end, { height = Helper.standardButtonHeight })
+	row[1]:createCheckBox(function () return menu.contextData.saveOption or false end, { height = Helper.standardButtonHeight, mouseOverText = mouseOverText })
 	row[1].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
-    row[2]:setColSpan(3):createText(ReadText(1134010, 6034), { wordwrap = true })     -- "Do not show again"
-	--row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"] }):setText(ReadText(1134010, 6034)) -- "Do not show again"
-	--row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption end
+	row[2]:setColSpan(3):createButton({ bgColor = config.Color["button_background_hidden"], mouseOverText = mouseOverText }):setText(ReadText(1134010, 6034)) -- "Do not show again"
+	row[2].handlers.onClick = function () menu.contextData.saveOption = not menu.contextData.saveOption; menu.createCP_RemoveShipContext(); end
 	row[5]:createButton({  }):setText(ReadText(1134010, 1073), { halign = "center" })  -- Confirm
 	row[5].handlers.onClick = menu.buttonCP_RemoveShipConfirm
 	row[6]:createButton({  }):setText(ReadText(1134010, 1074), { halign = "center" })    -- Cancel
@@ -3584,7 +3586,6 @@ function menu.buttonRemoveRFM()
         menu.RemoveRFM()
     else
 		menu.contextData = menu.contextData or {}
-        menu.contextData.saveOption = false
 		menu.contextData.mode = "RemoveRFM"
         menu.displayContextFrame("RemoveRFM", Helper.scaleX(400), (Helper.viewWidth - Helper.scaleX(400)) / 2, Helper.viewHeight / 2)
     end
@@ -3603,6 +3604,7 @@ function menu.buttonCP_RemoveRFMConfirm()
 end
 
 function menu.buttonCP_RemoveRFMCancel()
+    menu.contextData.saveOption = menu.editedSettings.UserQuestions.RemoveRFM
 	menu.closeContextMenu()
 end
 
@@ -3721,7 +3723,8 @@ function menu.buttonCP_RemoveShipConfirm()
 end
 
 function menu.buttonCP_RemoveShipCancel()
-	menu.closeContextMenu()
+	menu.contextData.saveOption = menu.editedSettings.UserQuestions.RemoveShip
+    menu.closeContextMenu()
 end
 
 function menu.buttonRemoveShip()

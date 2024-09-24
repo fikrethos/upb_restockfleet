@@ -150,7 +150,7 @@
    <t id="6028">When the ship belonging to this RFM destroyed, the rebuild process will NOT be started automatically.</t>
    <t id="6029">RFM to be cloned</t>
    <t id="6030">Show on map.</t>
-   <t id="6031">Removes the selected ship from the Restock Fleet records.\nOnly valid for exploded ships that cannot be produced.\n  Attention! You can only remove the real commander if there are no other ships in the fleet.</t>
+   <t id="6031">Removes the selected ship from the Restock Fleet records.\n ! Only valid for exploded ships that cannot be produced.</t>
    <t id="6032">Remove RFM_%s From Manager</t>
    <t id="6033">Are you sure you want to remove this?</t>
    <t id="6034">Do not show again</t>
@@ -160,7 +160,9 @@
    <t id="6038">Waiting for next rebuild check</t>
    <t id="6039">To fix, detach from RFM and reattach.</t>
    <t id="6040">Cancel Construction</t>
+   <t id="6041">Once confirmed, this option will appear again when the settings are reset to default.</t>
    
+
    <t id="6100">Object Price</t>
    <t id="6101">Crews Price</t>
    <t id="6102">Player Money</t>
@@ -226,6 +228,9 @@
    <t id="9009">No have %s for this faction.</t>
    <t id="9010">Can not select any possible Best Station in compability yards.</t>
    <t id="9011">Insufficient funds.</t>
+   <t id="9012">The calculated ship cost (%s Cr) exceeded the players available funds (%s Cr).</t>
+   <t id="9013">The calculated ship cost (%s Cr) exceeded the ship production allowed cost (%s Cr).</t>
+   <t id="9014">After the calculated ship fee (%s Cr) is deducted from the player\'s money, (%s Cr) the remaining amount is less than the set money threshold %s Cr.</t>
 
    <t id="9050">Normal</t>
    <t id="9051">RFM Commander no have a Pilot.</t>
