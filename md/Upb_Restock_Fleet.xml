@@ -3,9 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 <!-- Yapılanlar ve düzeltilenler :
         * 
-        1- UpbMods menusündeki textler dil dosyasına bağlandı.
-        2- Rebuild bulamamış gemilerde Fleet Commander da RemoveShip ile kayıtlardan çıkarılabiliyor. Bu durumda Main Sublardan threat seviyesi büyük olan seçim alacak.
-        3- RFM promoted Commander başka bir factiona satıldığında RFMnin kapanma hatası giderildi.
+        1- linux üzerinde hata vermemesi için mod dosya isimleri küçük harflere çevrildi.
 
     -->
     <!-- Yapılacaklar listesi
@@ -3585,7 +3583,7 @@
                                 <!-- Promoted patlayıp yerine birisi geçerse bu olay tetiklenmez, ancak;
                                     patlamadan sonra promoted olabilecek gemi bulunamaz ise (üretilemez ya da filoda başka gemi kalmamıştır) bu olay tetiklenir. -->
                                 <!-- Bu yüzden owner değişimi patlamadan dolayı kaynaklanmayacak ya da factionu değişmiş olduğunda RFM kapanacak. -->
-                                <do_if value="event.object.isoperational or ( event.param != '' and not event.param == faction.player) ">
+                                <do_if value="event.object.isoperational or ( event.param != '' and event.param != faction.player ) ">
                                     <!-- param $RFMKey Or list [ $RFMKey, $endBy (default 'player'), $IsSpeak (default false), $IsSound (default false), $cancelcue (default true), $removetable (default true) ] -->
                                     <signal_cue_instantly cue="Disable__RFM" param="[$RFMKey, 'Changed Owner', false, true]"/>
                                 </do_if>
