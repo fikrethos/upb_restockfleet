@@ -89,7 +89,7 @@
                     </do_if>
                     <do_if value="$isfreefleetcommander?">
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
-                            <add_player_choice_sub text="'\33' + Main.$normalColor + readtext.{Main.$tPage}.{1510} + '\33X'" section="EnableRestockFleet" position="bottom_left"/>
+                            <add_player_choice_sub text="'\33' + Main.$normalColor + readtext.{Main.$tPage}.{1510} + '\33X'" section="csRFM_Enable" position="bottom_left"/>
                         </do_if>
                         <do_else>
                             <run_actions ref="Get_RFMKey_From_ShipObject" result="$RFMKey">
