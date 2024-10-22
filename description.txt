@@ -1,5 +1,3 @@
-* Compatible for x4 6xx and 7.00. 
-
 English (Google Translate)
 Allows automatic construction of exploding ships in a saved fleet (for commanders or all their subordinates).
 ** For fleets whose Commander is a station, only the station itself cannot be produced.

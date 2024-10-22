@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 <!-- Yapılanlar ve düzeltilenler :
         * 
-        1- linux üzerinde hata vermemesi için mod dosya isimleri küçük harflere çevrildi.
+        
 
     -->
     <!-- Yapılacaklar listesi
@@ -2414,7 +2414,9 @@
                         <remove_value name="event.object.$Restock" />
                     </conditions>
                     <actions>
-                        
+                        <!-- 
+                        <debug_text text="'1 %s %s : entity = %s, %s , RFM? %s, @RFM %s'.[event.name, event.param, event.object, event.object.name, event.object.$RFM?, @event.object.$RFM]" />
+                        -->
                         <!-- RFM Hatalı Kapanma testi-->
                         <set_value name="$entityFlag" exact="true"/>
                         <do_if value="not event.object.$RFM? and @event.object.$RFM == null ">
@@ -2428,7 +2430,7 @@
                             </do_if>
                         </do_for_each>
                         <do_if value="not $entityRFM? and $entityFlag?">
-                            <debug_text text="' Broken RFM. Clearing Entity Flag '.[]" />
+                            <debug_text text="' B R O K E N    R F M. Clearing Entity Flag '.[]" />
                             <run_actions ref="Clear_ShipCaption">
                                 <param name="RFMKey" value="0" />
                                 <param name="ship" value="event.object.assignedcontrolled" />
@@ -2439,7 +2441,8 @@
                             <signal_cue_instantly cue="RF_Manager" param="[event.object, true]"/>
                             -->
                         </do_if>
-
+                        <remove_value name="$entityRFM" />
+                        <remove_value name="$entityFlag" />
 
                         <do_if value="@md.ExtendedConversationMenu.Main.exists">
                             <set_value name="md.ExtendedConversationMenu.Main.$convOptions.$RFMmenu" exact="table[

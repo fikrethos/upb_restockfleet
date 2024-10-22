@@ -1,9 +1,11 @@
 --[[
     Yapılanlar
-
+        1- Manager ekranında rfm isimlerinin başına autobuild durumunu belirten ikon eklendi.
+        
     Yapılacaklar listesi
     
    
+    * manager ekranı sağ panel ilerdeki çalışmalar için sekmeli hazırlanacak
     * manager ekranı güncelleme isteği geldiğinde gemiler sıraya konduktan sonra seçili olan gemiye konumlanmıyor
 
     * tWare bilgisi üzerinden macro kullanarak patlamış gemilerin tShipPlanı çıkartılacak
@@ -1898,18 +1900,30 @@ function menu.add_RFMFleetTable_FleetEntry(ftable, fleetEntry)
     
     row[1]:createText(fleet.id, { color = config.sColor.white, scaling = true, fontsize = Helper.titleFontSize, y = (textheight - Helper.titleHeight) / 2, halign = "right" } )
 
-    local name = ((fleet.name == "") and fleet.commander.name or fleet.name)
-    local idcode = ((fleet.idcode == "") and "   {   " .. ReadText(1134010, 6020) .. "   }" or fleet.idcode)    -- "All Ships are DEAD"
-    local mouseovertext = tonumber(fleet.alertstatus.level) > 1 and ReadText(1134010, 6021) .. ReadText(1001, 120) .. "\n" .. Helper.convertColorToText(color) .. fleet.alertstatus.text or ""   -- "Alert Status", ":"
-
+    
+    local mouseovertext = tonumber(fleet.alertstatus.level) > 1 and ReadText(1134010, 6021) .. ReadText(1001, 120) .. "\n" .. Helper.convertColorToText(color) .. fleet.alertstatus.text or ""   -- "Alert Status", ":"    
     if fleet.isStation then
         row[2]:createIcon(icon, { scaling = true, width = textheight - 2 , height = textheight - 2  , color = color, mouseOverText = mouseovertext})
     else
         row[2]:createText(string.format("\027[%s]", icon), { color = color, mouseOverText = mouseovertext } )
     end
     -- debugW
+
+    -- "rfm_autobuild"
+    local autobuildcolor = config.Color.text_success
+    local mouseovertextautobuild = Helper.convertColorToText(config.sColor.white) .. "[ " .. ReadText(1134010, 6026) .. " : " .. string.format("%s%s\027X", Helper.convertColorToText(config.Color.text_success), ReadText(1134010, 1340)) .. " ] "      -- "Autobuild Status", "ON",  .. ReadText(1134010, 6027) "When the ship belonging to this RFM destroyed, the rebuild process will be started automatically."
+    local autobuilicon = string.format("\027[%s]", "rfm_autobuild")
+    if not fleet.autobuild then
+        autobuildcolor = config.Color.text_inactive
+        mouseovertextautobuild = Helper.convertColorToText(config.sColor.white) .. "[ " .. ReadText(1134010, 6026) .. " : " .. string.format("%s%s\027X", Helper.convertColorToText(config.Color.text_hostile), ReadText(1134010, 1341)) .. " ] "   -- "Autobuild Status", "OFF", .. ReadText(1134010, 6028) "When the ship belonging to this RFM destroyed, the rebuild process will NOT be started automatically."
+    end
+    mouseovertext = mouseovertext .. (mouseovertext ~= "" and "\n" or "") .. mouseovertextautobuild
+
+    local fleetname = ((fleet.name == "") and fleet.commander.name or fleet.name)
+    local idcode = ((fleet.idcode == "") and "   {   " .. ReadText(1134010, 6020) .. "   }" or fleet.idcode)    -- "All Ships are DEAD"
+    local name = string.format("%s%s %s%s\027X", Helper.convertColorToText(autobuildcolor),  autobuilicon, Helper.convertColorToText(normalrowcolor), fleetname .. " " .. idcode)
     
-    row[3]:createText((name .. " " .. idcode .. ((debugW) and "   { row ".. tostring(row.index) .. " }" or "" ) ), { color = normalrowcolor, mouseOverText = mouseovertext  } )
+    row[3]:createText((name .. ((debugW) and "   { row ".. tostring(row.index) .. " }" or "" ) ), { mouseOverText = mouseovertext  } )
 
     local Icon_OrderIconsGrp = row[4]:setColSpan(3):createIcon("solid", { scaling = false, color = { r = 0, g = 0, b = 0, a = 1 }, height = textheight })
 
